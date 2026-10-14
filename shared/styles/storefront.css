@@ -802,11 +802,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .mobile-menu-panel summary::after { content: "+"; }
 .mobile-menu-panel details[open] summary::after { content: "−"; }
 .mobile-menu-panel details > a { padding-left: 2rem; background: var(--ve-surface-soft); font-weight: 500; }
-.mobile-navigation-dialog { max-height: calc(100dvh - 1rem); }
-.mobile-menu-heading { position: sticky; top: 0; z-index: 1; margin: -1.5rem -1.5rem 0; padding: .65rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--ve-line); background: white; }
+.mobile-navigation-dialog { position: fixed; inset: 4rem 1rem auto; margin: 0 auto; max-height: calc(100dvh - 5rem); overflow: hidden; }
+.mobile-navigation-dialog .dialog-inner { max-height: calc(100dvh - 5rem); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.mobile-menu-heading { flex: 0 0 auto; padding: .65rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--ve-line); background: white; }
 .mobile-menu-heading h2 { margin: 0; font-size: 1.15rem; }
 .mobile-menu-heading .icon-button { flex: 0 0 2.75rem; }
-.mobile-navigation-dialog .dialog-inner > p { font-size: .85rem; }
+.mobile-navigation-dialog .dialog-inner > p { flex: 0 0 auto; margin: 0; padding: .75rem 1rem; font-size: .85rem; }
+.mobile-navigation-dialog .mobile-menu-panel { min-height: 0; margin: 0; overflow-y: auto; overscroll-behavior: contain; }
 .cart-drawer-dialog, .chat-dialog, .zoom-dialog, .account-dialog, .localization-dialog { padding: 0; border: 0; background: transparent; color: var(--ve-ink); }
 .cart-drawer-dialog::backdrop, .chat-dialog::backdrop, .zoom-dialog::backdrop, .account-dialog::backdrop, .localization-dialog::backdrop { background: rgba(7,31,23,.66); }
 .cart-drawer-dialog { width: min(27rem,100%); max-width: none; height: 100dvh; max-height: none; margin: 0 0 0 auto; }
