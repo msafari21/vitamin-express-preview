@@ -112,3 +112,101 @@
 }
 @media (prefers-reduced-motion: reduce) { .utility-strip::before { animation: none; opacity: .35; } }
 @media (forced-colors: active) { .utility-strip::before { display: none; } .utility-benefits > .canadian-owned-chip { border-color: ButtonText; } }
+
+/* Small, practical buying aids; existing campaign and header proportions stay intact. */
+.price-range-form { padding: 0 0 1rem; }
+.price-range-currency, .price-range-hint { margin: 0 0 .6rem; font-size: .72rem; color: var(--ve-ink-soft); }
+.price-range-inputs { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: end; gap: .45rem; }
+.price-range-inputs label { display: grid; gap: .3rem; font-size: .75rem; font-weight: 650; }
+.price-range-inputs > span { padding-bottom: .6rem; }
+.price-range-inputs input { width: 100%; min-width: 0; min-height: 2.75rem; padding: .5rem; border: 1px solid #c9d5c3; border-radius: .5rem; background: #fff; color: var(--ve-ink); font-size: 1rem; }
+.price-range-sliders { position: relative; height: 2.75rem; margin: .25rem .6rem; }
+.price-range-sliders::before { content: ''; position: absolute; inset: calc(50% - 2px) 0 auto; height: 4px; border-radius: 4px; background: linear-gradient(to right,#e3e9de var(--range-start),#7ba732 var(--range-start),#7ba732 var(--range-end),#e3e9de var(--range-end)); }
+.price-range-sliders input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; appearance: none; background: transparent; pointer-events: none; border: 0; }
+.price-range-sliders input::-webkit-slider-thumb { appearance: none; width: 1.25rem; height: 1.25rem; border: 2px solid #527b27; border-radius: 50%; background: white; box-shadow: 0 1px 4px #193b2426; pointer-events: auto; cursor: ew-resize; }
+.price-range-sliders input::-moz-range-thumb { width: 1.1rem; height: 1.1rem; border: 2px solid #527b27; border-radius: 50%; background: white; pointer-events: auto; cursor: ew-resize; }
+.price-range-sliders input:focus-visible { z-index: 1; outline: 2px solid var(--ve-brand); outline-offset: 2px; border-radius: .4rem; }
+.price-range-actions { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.price-range-actions .button { min-height: 2.75rem; padding: .45rem .7rem; font-size: .8rem; }
+.price-range-actions .text-button { min-height: 2.75rem; font-size: .78rem; }
+.pack-size-link { display: flex; align-items: center; gap: .4rem; min-height: 2.4rem; font-size: .78rem; font-weight: 700; color: var(--ve-brand); text-decoration: none; }
+.pack-size-link:hover { text-decoration: underline; }
+.pack-size-help { margin: .25rem 0 .7rem; color: var(--ve-ink-soft); font-size: .8rem; }
+.variant-option .pack-price { font-weight: 700; font-size: .84rem; color: var(--ve-brand-deep); }
+.variant-radio:checked + .variant-option { background: #f3f9e9; border-color: #628d32; box-shadow: inset 0 0 0 1px #628d32; }
+.purchase-reassurance { display: grid; margin: .75rem 0 1rem; border: 1px solid #dfe8d8; border-radius: .8rem; overflow: hidden; background: #fafcf7; }
+.purchase-reassurance > * { display: grid; grid-template-columns: 1.3rem minmax(0,1fr) 1rem; align-items: center; gap: .7rem; padding: .75rem .9rem; text-decoration: none; border: 0; border-bottom: 1px solid #e5ecdf; background: transparent; color: var(--ve-brand); text-align: left; cursor: pointer; font: inherit; }
+.purchase-reassurance > :last-child { border-bottom: 0; }
+.purchase-reassurance > :hover { background: #f0f6e8; }
+.purchase-reassurance span { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .15rem .7rem; }
+.purchase-reassurance strong { font-size: .8rem; }
+.purchase-reassurance small { font-size: .73rem; color: var(--ve-ink-soft); }
+.purchase-reassurance .icon { width: 1.2rem; height: 1.2rem; }
+.purchase-reassurance .icon:last-child { width: .85rem; transform: rotate(-90deg); }
+.brands-shelf { padding-block: 1rem; }
+.brands-shelf-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: .7rem; }
+.brands-shelf-grid > a { min-height: 6.5rem; padding: .7rem; display: flex; align-items: center; gap: .5rem; border: 1px solid #e0e8d8; border-radius: .8rem; background: white; text-decoration: none; }
+.brands-shelf-grid > a:hover { border-color: #91ac76; background: #fbfdf8; }
+.brands-shelf-grid img { width: 3rem; height: 4.5rem; object-fit: contain; }
+.brands-shelf-grid strong { display: block; font-size: .88rem; }
+.brands-shelf-grid small { display: block; margin-top: .35rem; font-size: .67rem; color: var(--ve-ink-soft); }
+.comparison-hint { margin: 0 0 .5rem; color: var(--ve-ink-soft); font-size: .8rem; }
+.compare-choice { display: flex; align-items: center; gap: .4rem; width: fit-content; min-height: 2.75rem; color: var(--ve-ink-soft); font-size: .78rem; cursor: pointer; }
+.compare-choice input { width: 1rem; height: 1rem; accent-color: var(--ve-brand); }
+.compare-choice:has(:checked) { color: var(--ve-brand); font-weight: 700; }
+.compare-choice:has(:disabled) { opacity: .5; cursor: default; }
+.has-comparison { padding-bottom: 6rem; }
+.comparison-tray { position: fixed; z-index: 45; bottom: 1rem; left: 50%; transform: translateX(-50%); width: min(42rem,calc(100% - 10rem)); display: flex; align-items: center; gap: .9rem; padding: .7rem .85rem; border: 1px solid #cedbc4; border-radius: 1rem; background: #fff; box-shadow: 0 .5rem 2rem #1c3e2426; }
+.comparison-tray > span { flex: 1; }
+.comparison-tray strong { display: block; font-size: .88rem; }
+.comparison-tray small { display: block; font-size: .7rem; color: var(--ve-ink-soft); }
+.comparison-tray .button { min-height: 2.75rem; }
+.comparison-picks { display: flex; gap: .3rem; }
+.comparison-picks button { display: flex; align-items: center; min-height: 2.75rem; padding: .15rem; border: 1px solid #e0e7da; border-radius: .4rem; background: white; cursor: pointer; }
+.comparison-picks img { width: 2rem; height: 2.4rem; object-fit: contain; }
+.comparison-picks span { font-size: .9rem; padding: .2rem; }
+.comparison-dialog { width: min(62rem,calc(100% - 2rem)); max-height: calc(100dvh - 3rem); padding: 0; border: 1px solid #dbe5d4; border-radius: 1rem; overflow-y: auto; background: white; color: var(--ve-ink); }
+.comparison-dialog::backdrop { background: #19352566; backdrop-filter: blur(3px); }
+.comparison-heading { position: sticky; z-index: 3; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: #f5f9ef; border-bottom: 1px solid #e0e8da; }
+.comparison-heading h2 { margin: 0; font-size: 1.4rem; }
+.comparison-heading .eyebrow { margin: 0 0 .15rem; font-size: .7rem; }
+.comparison-note { padding: .8rem 1.25rem; margin: 0; color: var(--ve-ink-soft); font-size: .78rem; }
+.comparison-scroll { overflow-x: auto; padding: 0 1rem 1rem; overscroll-behavior-x: contain; }
+.comparison-scroll table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .82rem; }
+.comparison-scroll td, .comparison-scroll th { padding: .8rem; text-align: left; border-bottom: 1px solid #e4eadf; vertical-align: top; }
+.comparison-scroll thead th { min-width: 12rem; width: 28%; }
+.comparison-scroll thead img { display: block; width: 6rem; height: 7rem; object-fit: contain; margin: 0 auto .7rem; }
+.comparison-scroll thead a { display: block; color: var(--ve-brand); font-weight: 650; text-decoration: none; }
+.comparison-scroll tbody th { position: sticky; left: 0; z-index: 1; min-width: 7rem; background: #f8faf5; font-size: .75rem; }
+.comparison-scroll select { width: 100%; min-height: 2.75rem; font-size: 1rem; padding: .4rem; border: 1px solid #cfdcc4; border-radius: .4rem; background: white; }
+.comparison-scroll .current-price { font-size: 1rem; }
+.comparison-scroll-hint { display: none; }
+@media (max-width: 1100px) { .brands-shelf-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 700px) {
+  .brands-shelf-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; }
+  .brands-shelf-grid > a { min-height: 5.4rem; padding: .5rem; }
+  .brands-shelf-grid img { width: 2.6rem; height: 3.8rem; }
+  .brands-shelf-grid strong { font-size: .8rem; }
+  .comparison-tray { width: calc(100% - 1rem); bottom: .5rem; gap: .4rem; padding: .6rem; }
+  .comparison-tray strong { font-size: .8rem; }
+  .comparison-tray small { font-size: .63rem; }
+  .comparison-picks { display: none; }
+  .comparison-tray .button { padding-inline: .7rem; font-size: .8rem; }
+  .has-comparison .chat-launcher { bottom: 6rem; }
+  .comparison-heading { padding: .75rem; }
+  .comparison-heading h2 { font-size: 1.15rem; }
+  .comparison-note { padding: .75rem; }
+  .comparison-scroll { padding: 0 .5rem .5rem; }
+  .comparison-scroll table { --comparison-count: 2; }
+  .comparison-scroll table:has(thead th:nth-of-type(3)) { --comparison-count: 3; min-width: 25rem; }
+  .comparison-scroll thead, .comparison-scroll tbody { display: block; }
+  .comparison-scroll tr { display: grid; grid-template-columns: repeat(var(--comparison-count),minmax(0,1fr)); }
+  .comparison-scroll thead td { display: none; }
+  .comparison-scroll td, .comparison-scroll th { padding: .6rem; }
+  .comparison-scroll tbody th { position: static; grid-column: 1 / -1; min-width: 0; padding-block: .45rem; }
+  .comparison-scroll thead th { min-width: 0; width: auto; font-size: .74rem; }
+  .comparison-scroll td { min-width: 0; overflow-wrap: anywhere; }
+  .comparison-scroll .button { padding-inline: .45rem; font-size: .74rem; }
+  .comparison-scroll .current-price { font-size: .85rem; }
+  .comparison-dialog:has(thead th:nth-of-type(3)) .comparison-scroll-hint { display: block; padding: 0 .75rem; margin: 0 0 .6rem; font-size: .7rem; color: var(--ve-brand); }
+}

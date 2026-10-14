@@ -35,6 +35,8 @@ let heroTimer;
 let heroTouchStartX = null;
 let offerTimer;
 let megaHoverTimer;
+let comparedHandles = [];
+const comparedVariants = new Map();
 const MEGA_HOVER_INTENT_MS = 110;
 
 const escapeHtml = (value = '') => String(value)
@@ -360,8 +362,8 @@ function breadcrumbs(items) {
   return `<nav class="breadcrumbs" aria-label="Breadcrumb">${items.map((item, index) => item.href ? `<a href="${item.href}">${escapeHtml(item.label)}</a><span aria-hidden="true">/</span>` : `<span aria-current="page">${escapeHtml(item.label)}</span>`).join('')}</nav>`;
 }
 
-function productCard(product, { query = '' } = {}) {
-  const matchingVariant = variantFromSearch(product, query);
+function productCard(product, { query = '', priceRange = null, availableOnly = false, comparison = false } = {}) {
+  const matchingVariant = priceRange && product.variants.length > 1 ? product.variants.find((variant) => (!availableOnly || variant.available_snapshot) && matchesPriceRange(variant, priceRange)) : variantFromSearch(product, query);
   const variant = matchingVariant || product.variants.find((item) => item.available_snapshot) || product.variants[0];
   const multi = product.variants.length > 1;
   const href = productHref(product, matchingVariant?.source_id || '');
@@ -377,16 +379,58 @@ function productCard(product, { query = '' } = {}) {
       <a class="product-title" href="${href}">${escapeHtml(product.title)}</a>
       ${matchingVariant ? `<span class="matched-variant">Matched option: ${escapeHtml(matchingVariant.title)}</span>` : `<span class="product-meta">${escapeHtml(product.family)}</span>`}${productPriceMarkup(product, matchingVariant)}
       <span class="product-stock ${variant.available_snapshot ? 'is-available' : 'is-unavailable'}">${variant.available_snapshot ? 'In stock' : 'Out of stock'}</span>
+      ${multi ? `<a class="pack-size-link" href="${href}">${t('Choose pack size')} <span aria-hidden="true">→</span></a>` : ''}
     </div>
     <div class="product-actions">${multi
       ? `<a class="button secondary small" href="${href}">${matchingVariant ? `Review ${escapeHtml(matchingVariant.title)}` : 'Choose options'}</a>`
       : `<button class="button small" type="button" data-add data-handle="${escapeHtml(product.handle)}" data-variant="${escapeHtml(variant.source_id)}" ${variant.available_snapshot ? '' : 'disabled'}>${variant.available_snapshot ? 'Add to cart' : 'Sold out'}</button>`}
     </div>
+    ${comparison ? `<label class="compare-choice"><input type="checkbox" data-compare-product="${escapeHtml(product.handle)}" ${comparedHandles.includes(product.handle) ? 'checked' : ''}><span>Compare</span><span class="sr-only"> ${escapeHtml(product.title)}</span></label>` : ''}
   </article>`;
 }
 
 function productGrid(products, options = {}) {
   return `<div class="product-grid">${products.map((product) => productCard(product, options)).join('')}</div>`;
+}
+
+function comparisonTrayMarkup() {
+  if (!comparedHandles.length) return '';
+  return `<aside class="comparison-tray" aria-label="Product comparison"><span><strong>${t('Compare products')}</strong><small role="status">${comparedHandles.length} / 3 · ${t('Select 2 or 3 products')}</small></span><div class="comparison-picks">${comparedHandles.map(handle => `<button type="button" data-remove-comparison="${escapeHtml(handle)}" aria-label="${t('Remove')} ${escapeHtml(findProduct(handle).title)}"><img src="${productImage(findProduct(handle))}" width="36" height="36" alt=""><span aria-hidden="true">×</span></button>`).join('')}</div><button class="button small" type="button" data-open-comparison ${comparedHandles.length < 2 ? 'disabled' : ''}>${t('Compare')}</button><button class="icon-button" type="button" data-clear-comparison aria-label="${t('Clear comparison')}">${icon('close')}</button></aside>`;
+}
+
+function syncComparison() {
+  const tray = document.querySelector('[data-comparison-tray]');
+  if (tray) tray.innerHTML = comparisonTrayMarkup();
+  document.querySelectorAll('[data-compare-product]').forEach(input => {
+    input.checked = comparedHandles.includes(input.dataset.compareProduct);
+    input.disabled = comparedHandles.length >= 3 && !input.checked;
+  });
+  document.body.classList.toggle('has-comparison', Boolean(tray && comparedHandles.length));
+}
+
+function comparisonMarkup() {
+  const items = comparedHandles.map(findProduct).filter(Boolean).map(product => ({ product, variant: product.variants.find(v => v.source_id === comparedVariants.get(product.handle)) || product.variants.find(v => v.available_snapshot) || product.variants[0] }));
+  const row = (label, content) => `<tr><th scope="row">${t(label)}</th>${items.map(item => `<td>${content(item)}</td>`).join('')}</tr>`;
+  return `<header class="comparison-heading"><div><p class="eyebrow">${t('A closer look')}</p><h2 id="comparison-title">${t('Compare products')}</h2></div><button class="icon-button" type="button" data-close-comparison aria-label="${t('Close comparison')}">${icon('close')}</button></header><p class="comparison-note">${t('Compare pack details, not medical suitability. Different strengths and serving sizes are not equivalent.')}</p><p class="comparison-scroll-hint">${t('Swipe across to see every product →')}</p><div class="comparison-scroll" tabindex="0" role="region" aria-label="${t('Product comparison')}"><table><caption class="sr-only">${t('Product comparison')}</caption><thead><tr><td></td>${items.map(({product, variant}) => `<th scope="col"><img src="${productImage(product)}" width="100" height="100" alt=""><a href="${productHref(product, variant.source_id)}">${escapeHtml(product.title)}</a></th>`).join('')}</tr></thead><tbody>
+    ${row('Brand', ({product}) => escapeHtml(product.vendor))}
+    ${row('Pack / option', ({product, variant}) => product.variants.length > 1 ? `<label><span class="sr-only">${t('Choose pack size')} · ${escapeHtml(product.title)}</span><select data-compare-variant="${escapeHtml(product.handle)}">${product.variants.map(v => `<option value="${escapeHtml(v.source_id)}" ${v.source_id === variant.source_id ? 'selected' : ''}>${escapeHtml(v.title)}</option>`).join('')}</select></label>` : escapeHtml(variant.title === 'Default Title' ? product.title : variant.title))}
+    ${row('Price', ({variant}) => priceMarkup(variant, {compact:true}))}
+    ${row('Price per unit', ({product, variant}) => escapeHtml(unitPriceLabel(product, variant) || t('Not supplied')))}
+    ${row('Format', ({product}) => t(productFormat(product) || 'Not supplied'))}
+    ${row('Label information', ({product}) => sourceBackedAttributes(product).map(t).join(' · ') || t('Not supplied'))}
+    ${row('Availability', ({variant}) => t(variant.available_snapshot ? 'In stock' : 'Out of stock'))}
+    ${row('Next step', ({product, variant}) => `<a class="button secondary small" href="${productHref(product, variant.source_id)}">${t('View product')}</a>`)}
+  </tbody></table></div>`;
+}
+
+function brandsShelf() {
+  const brands = ['AOR', 'NOW', 'Genestra', 'New Roots', 'Natural Factors', 'A. Vogel'];
+  const products = brands.map(brand => catalog.products.find(product => product.vendor === brand)).filter(Boolean);
+  return `<section class="section brands-shelf" aria-labelledby="brands-shelf-title"><div class="section-head"><div><p class="eyebrow">Find your favourites</p><h2 id="brands-shelf-title">Brands we carry</h2></div><a href="#/brands">Explore all brands →</a></div><div class="brands-shelf-grid">${products.map(product => `<a href="#/brand/${slugify(product.vendor)}"><img src="${productImage(product)}" width="64" height="72" alt="" loading="lazy"><span><strong>${escapeHtml(product.vendor)}</strong><small>Shop the range <span aria-hidden="true">→</span></small></span></a>`).join('')}</div></section>`;
+}
+
+function purchaseReassurance() {
+  return `<nav class="purchase-reassurance" aria-label="Shopping information"><button type="button" data-open-delivery>${icon('location')}<span><strong>Delivery estimates</strong><small>Check your postal code</small></span>${icon('chevron')}</button><a href="#/support">${icon('shield')}<span><strong>Returns & support</strong><small>Know before you order</small></span>${icon('chevron')}</a><a href="#/article/how-to-read-a-supplement-label">${icon('order')}<span><strong>Know your product</strong><small>Understand the label</small></span>${icon('chevron')}</a></nav>`;
 }
 
 function productRail({ id, eyebrow, title, products, href, feature = null }) {
@@ -483,7 +527,8 @@ function homePage() {
     ${productRail({ id: 'foundations-rail', eyebrow: settings.thematic_shelf.eyebrow, title: settings.thematic_shelf.heading, products: thematicProducts, href: settings.thematic_shelf.href, feature: settings.thematic_shelf.lifestyle_image ? `<article class="shelf-feature shelf-feature--lifestyle"><img src="${escapeHtml(settings.thematic_shelf.lifestyle_image)}" alt="${escapeHtml(settings.thematic_shelf.lifestyle_alt || '')}" loading="lazy"><div class="shelf-feature__copy"><p class="eyebrow">For growing routines</p><h3>${escapeHtml(settings.thematic_shelf.body)}</h3><a href="${escapeHtml(settings.thematic_shelf.href)}">Shop kids & family →</a></div></article>` : thematicFeature ? `<article class="shelf-feature"><div><p class="eyebrow">Compare before choosing</p><h3>${escapeHtml(settings.thematic_shelf.body)}</h3><a class="text-link" href="#/product/${encodeURIComponent(thematicFeature.handle)}">View product →</a></div><img src="${productImage(thematicFeature)}" alt="${escapeHtml(thematicFeature.media[0].alt)}" loading="lazy"></article>` : '' })}
     ${productRail({ id: 'pantry-rail', eyebrow: 'Food & healthy living', title: 'Pantry & daily living', products: pantryProducts, href: '#/collection/food-and-healthy-living' })}
     <section class="section editorial-feature"><div class="editorial-art" aria-label="Supplement label examples from the catalog"><span class="editorial-art__badge"><b>4</b><span>checks before<br>you choose</span></span>${editorialProducts.map((product, index) => `<img class="editorial-product editorial-product--${index + 1}" src="${productImage(product)}" alt="${escapeHtml(product.media[0].alt)}" loading="lazy">`).join('')}</div><div class="editorial-copy"><p class="eyebrow">${escapeHtml(settings.editorial.eyebrow)}</p><h2>${escapeHtml(settings.editorial.heading)}</h2><p>${escapeHtml(settings.editorial.body)}</p><ol class="editorial-checks"><li><span>01</span><div><strong>Serving size</strong><small>Per capsule, scoop or full serving</small></div></li><li><span>02</span><div><strong>Form</strong><small>Capsule, liquid, powder or chewable</small></div></li><li><span>03</span><div><strong>Strength</strong><small>Amount per serving, not just per unit</small></div></li><li><span>04</span><div><strong>Directions &amp; warnings</strong><small>Timing, age range and precautions</small></div></li></ol><a class="button secondary editorial-cta" href="${escapeHtml(settings.editorial.href)}">${escapeHtml(settings.editorial.label)} <span aria-hidden="true">→</span></a></div></section>
-    <section class="section journal-section" aria-labelledby="journal-highlights-title"><div class="section-head"><div><p class="eyebrow">Practical, product-first reading</p><h2 id="journal-highlights-title">Blogs & wellness guides</h2></div><a href="#/journal">Read all</a></div><div class="journal-grid">${journalCards.map((card) => `<article class="journal-card"><a class="journal-card__media journal-card__media--${escapeHtml(card.tone)}" href="${escapeHtml(card.href)}" aria-label="Read ${escapeHtml(card.title)}">${card.products.map((product) => `<img src="${productImage(product)}" alt="" loading="lazy">`).join('')}</a><div class="journal-card__copy"><p class="eyebrow">${escapeHtml(card.eyebrow)}</p><h3><a href="${escapeHtml(card.href)}">${escapeHtml(card.title)}</a></h3><p>${escapeHtml(card.excerpt)}</p><a href="${escapeHtml(card.href)}">Read guide →</a></div></article>`).join('')}</div></section>
+    ${brandsShelf()}
+    <section class="section journal-section" aria-labelledby="journal-highlights-title"><div class="section-head"><div><p class="eyebrow">Practical, product-first reading</p><h2 id="journal-highlights-title">Wellness advice & guides</h2></div><a href="#/journal">Read all</a></div><div class="journal-grid">${journalCards.map((card) => `<article class="journal-card"><a class="journal-card__media journal-card__media--${escapeHtml(card.tone)}" href="${escapeHtml(card.href)}" aria-label="Read ${escapeHtml(card.title)}">${card.products.map((product) => `<img src="${productImage(product)}" alt="" loading="lazy">`).join('')}</a><div class="journal-card__copy"><p class="eyebrow">${escapeHtml(card.eyebrow)}</p><h3><a href="${escapeHtml(card.href)}">${escapeHtml(card.title)}</a></h3><p>${escapeHtml(card.excerpt)}</p><a href="${escapeHtml(card.href)}">Read guide →</a></div></article>`).join('')}</div></section>
     <section class="section service-section" aria-labelledby="service-title"><div class="section-head"><div><p class="eyebrow">Here when you need us</p><h2 id="service-title">Shop with confidence</h2></div></div><div class="service-grid"><a href="#/support"><strong>Shipping information</strong><span>Review delivery regions, rates and exclusions before ordering.</span><b>Learn more →</b></a><a href="#/support"><strong>Returns</strong><span>Check eligibility and instructions before opening a product.</span><b>Learn more →</b></a><a href="#/support"><strong>Product questions</strong><span>For personal suitability, speak with a qualified health professional.</span><b>Get guidance →</b></a></div></section>`;
 }
 
@@ -575,12 +620,56 @@ function matchesPriceBand(product, band) {
   return true;
 }
 
+function selectedPriceRange(params) {
+  const read = (key) => params.has(key) && params.get(key).trim() !== '' && Number.isFinite(Number(params.get(key))) && Number(params.get(key)) >= 0 ? Number(params.get(key)) : null;
+  const min = read('min');
+  const max = read('max');
+  if (min === null && max === null) return null;
+  return { min: Math.min(min ?? 0, max ?? Infinity), max: Math.max(min ?? 0, max ?? Infinity) };
+}
+
+function matchesPriceRange(variant, range) {
+  const cents = Math.round(presentedPrice(variant.price.amount, variant.price.currency).amount * 100);
+  return cents >= Math.round(presentedPrice(range.min).amount * 100) && cents <= Math.round(presentedPrice(range.max).amount * 100);
+}
+
+function priceRangeMarkup(products, range) {
+  const rate = presentedPrice(1).amount;
+  const ceiling = Math.max(1, Math.ceil(Math.max(range ? presentedPrice(range.min).amount : 0, range && Number.isFinite(range.max) ? presentedPrice(range.max).amount : 0, ...products.flatMap(product => product.variants.map(variant => presentedPrice(variant.price.amount, variant.price.currency).amount)))));
+  const min = Math.min(ceiling, range ? presentedPrice(range.min).amount : 0).toFixed(2);
+  const max = Math.min(ceiling, range ? presentedPrice(range.max).amount : ceiling).toFixed(2);
+  return `<form class="price-range-form" data-price-range data-rate="${rate}">
+    <p class="price-range-currency">${escapeHtml(presentedPrice(0).currency)} · <span>Price per pack</span></p>
+    <div class="price-range-inputs"><label><span>From</span><input name="min" type="number" min="0" step="0.01" inputmode="decimal" value="${min}" required></label><span aria-hidden="true">–</span><label><span>To</span><input name="max" type="number" min="0" step="0.01" inputmode="decimal" value="${max}" required></label></div>
+    <div class="price-range-sliders" style="--range-start:${Number(min) / ceiling * 100}%;--range-end:${Number(max) / ceiling * 100}%"><input type="range" data-price-slider="min" aria-label="Minimum price" min="0" max="${ceiling}" step="0.01" value="${min}"><input type="range" data-price-slider="max" aria-label="Maximum price" min="0" max="${ceiling}" step="0.01" value="${max}"></div>
+    <p class="price-range-hint">Drag or enter your budget, then apply.</p><div class="price-range-actions"><button class="button secondary small" type="submit">Apply price</button><button class="text-button" type="button" data-reset-price>Reset</button></div>
+  </form>`;
+}
+
+function updatePriceInputs(input) {
+  const form = input.closest('[data-price-range]');
+  const key = input.dataset.priceSlider || input.name;
+  const slider = form.querySelector(`[data-price-slider="${key}"]`);
+  const other = form.elements[key === 'min' ? 'max' : 'min'];
+  const raw = Number(input.value);
+  if (input.value === '' || !Number.isFinite(raw)) return;
+  let value = Math.max(0, Math.min(Number(slider.max), raw));
+  if (input.type === 'range') value = key === 'min' ? Math.min(value, Number(other.value)) : Math.max(value, Number(other.value));
+  slider.value = value;
+  if (input.type === 'range') form.elements[key].value = value.toFixed(2);
+  form.elements.max.setCustomValidity(Number(form.elements.min.value) > Number(form.elements.max.value) ? t('Maximum price must be at least the minimum price.') : '');
+  const track = form.querySelector('.price-range-sliders');
+  track.style.setProperty('--range-start', `${Math.min(100, Number(form.elements.min.value) / Number(slider.max) * 100)}%`);
+  track.style.setProperty('--range-end', `${Math.min(100, Number(form.elements.max.value) / Number(slider.max) * 100)}%`);
+}
+
 function listingPage({ title, sourceProducts, params, emptyHint = '' }) {
   const selectedBrands = params.getAll('brand');
   const selectedTypes = params.getAll('type');
   const selectedFormats = params.getAll('format');
   const selectedAttributes = params.getAll('attribute');
   const selectedPrice = params.get('price') || '';
+  const priceRange = selectedPriceRange(params);
   const availableOnly = params.get('available') === '1';
   const sort = params.get('sort') || 'featured';
   const vendors = [...new Set(sourceProducts.map((product) => product.vendor))].sort((a,b) => a.localeCompare(b));
@@ -597,6 +686,7 @@ function listingPage({ title, sourceProducts, params, emptyHint = '' }) {
       && (!selectedFormats.length || selectedFormats.includes(format))
       && (!selectedAttributes.length || selectedAttributes.some((attribute) => attributes.includes(attribute)))
       && matchesPriceBand(product, selectedPrice)
+      && (!priceRange || product.variants.some((variant) => (!availableOnly || variant.available_snapshot) && matchesPriceRange(variant, priceRange)))
       && (!availableOnly || product.available_snapshot);
   });
   if (sort === 'featured') products.sort((a,b) => Number(b.available_snapshot) - Number(a.available_snapshot));
@@ -613,22 +703,23 @@ function listingPage({ title, sourceProducts, params, emptyHint = '' }) {
     ...selectedFormats.map((value) => chip('format', value)),
     ...selectedAttributes.map((value) => chip('attribute', value, attributeLabels[value] || value)),
     selectedPrice ? chip('price', selectedPrice, priceLabels[selectedPrice] || selectedPrice) : '',
+    priceRange ? chip('range', '', `${moneyLabel(priceRange.min)} – ${Number.isFinite(priceRange.max) ? moneyLabel(priceRange.max) : t('Any price')}`) : '',
     availableOnly ? chip('available', '1', 'In stock') : '',
   ].join('');
-  const filterCount = selectedBrands.length + selectedTypes.length + selectedFormats.length + selectedAttributes.length + (selectedPrice ? 1 : 0) + (availableOnly ? 1 : 0);
+  const filterCount = selectedBrands.length + selectedTypes.length + selectedFormats.length + selectedAttributes.length + (selectedPrice || priceRange ? 1 : 0) + (availableOnly ? 1 : 0);
   const checkboxList = (items, param, selected, predicate) => `<div class="filter-list">${items.map((item) => `<label class="filter-option"><input type="checkbox" data-facet data-param="${escapeHtml(param)}" value="${escapeHtml(item)}" ${selected.includes(item) ? 'checked' : ''}><span>${escapeHtml(item)}</span><span class="filter-count">${countFor((product) => predicate(product, item))}</span></label>`).join('')}</div>`;
   return `${breadcrumbs([{label:'Home',href:'#/'},{label:title}])}<header class="listing-head"><h1 class="page-title">${escapeHtml(title)}</h1><p class="result-count" aria-live="polite">${products.length}${products.length === sourceProducts.length ? '' : ` of ${sourceProducts.length}`} products</p></header>
     <div class="toolbar"><button class="button secondary small mobile-only" type="button" data-toggle-filters aria-expanded="false">Filter${filterCount ? ` (${filterCount})` : ''}</button><label><span>Sort by</span><select data-sort><option value="featured" ${sort==='featured'?'selected':''}>Featured & available</option><option value="saving" ${sort==='saving'?'selected':''}>Biggest saving</option><option value="price-asc" ${sort==='price-asc'?'selected':''}>Price: low to high</option><option value="price-desc" ${sort==='price-desc'?'selected':''}>Price: high to low</option><option value="title" ${sort==='title'?'selected':''}>Name</option></select></label></div>
     <div class="selected-chips">${chips}${filterCount ? '<button class="chip chip-clear" type="button" data-clear-filters>Clear all</button>' : ''}</div>
     <div class="collection-layout"><aside class="filter-panel" aria-label="Product filters"><div class="filter-head"><h2>Filter products${filterCount ? ` (${filterCount})` : ''}</h2><button class="icon-button mobile-only" type="button" data-toggle-filters aria-label="Close filters">${icon('close')}</button></div>
       <label class="filter-option filter-availability"><input type="checkbox" data-available ${availableOnly?'checked':''}><span>In stock only</span><span class="filter-count">${countFor((product) => product.available_snapshot)}</span></label>
+      <details class="filter-group" open><summary>Price</summary>${priceRangeMarkup(sourceProducts, priceRange)}</details>
       <details class="filter-group" open><summary>Product type</summary>${checkboxList(types, 'type', selectedTypes, (product, value) => cleanMenuLabel(product.product_type || '') === value)}</details>
       ${formats.length ? `<details class="filter-group" open><summary>Format</summary>${checkboxList(formats, 'format', selectedFormats, (product, value) => productFormat(product) === value)}</details>` : ''}
       ${availableAttributes.length ? `<details class="filter-group" open><summary>Preferences</summary><div class="filter-list">${availableAttributes.map((attribute) => `<label class="filter-option"><input type="checkbox" data-facet data-param="attribute" value="${escapeHtml(attribute.value)}" ${selectedAttributes.includes(attribute.value) ? 'checked' : ''}><span>${escapeHtml(attribute.label)}</span><span class="filter-count">${countFor((product) => productAttributes(product).includes(attribute.value))}</span></label>`).join('')}</div></details>` : ''}
-      <details class="filter-group" open><summary>Price</summary><div class="filter-list"><label class="filter-option"><input type="radio" name="price-filter" data-price value="" ${!selectedPrice ? 'checked' : ''}><span>Any price</span></label>${Object.entries(priceLabels).map(([value, label]) => `<label class="filter-option"><input type="radio" name="price-filter" data-price value="${value}" ${selectedPrice === value ? 'checked' : ''}><span>${label}</span><span class="filter-count">${countFor((product) => matchesPriceBand(product, value))}</span></label>`).join('')}</div></details>
       <details class="filter-group"><summary>Brand</summary>${checkboxList(vendors, 'brand', selectedBrands, (product, value) => product.vendor === value)}</details>
       <button class="button filter-apply mobile-only" type="button" data-toggle-filters>View ${products.length} products</button></aside>
-      <div>${products.length ? productGrid(products, { query: params.get('q') || '' }) : `<div class="empty-state"><h2>No matches</h2><p>${escapeHtml(emptyHint || 'Clear a filter or try another search.')}</p><button class="button secondary" type="button" data-clear-filters>Clear filters</button></div>`}</div></div>`;
+      <div>${products.length ? `<p class="comparison-hint">Want a closer look? Compare up to 3 products.</p>${productGrid(products, { query: params.get('q') || '', priceRange, availableOnly, comparison: true })}` : `<div class="empty-state"><h2>No matches</h2><p>${escapeHtml(emptyHint || 'Clear a filter or try another search.')}</p><button class="button secondary" type="button" data-clear-filters>Clear filters</button></div>`}</div></div><div data-comparison-tray>${comparisonTrayMarkup()}</div><dialog class="comparison-dialog" id="product-comparison" aria-labelledby="comparison-title"></dialog>`;
 }
 
 function collectionPage(slug, params) {
@@ -1006,10 +1097,10 @@ function productPage(handle, params) {
   const invalidDeepLink = requestedVariant && selected.source_id !== requestedVariant;
   const mediaState = mediaForVariant(product, selected);
   const sections = structuredProductContent(product.description_text);
-  const optionName = product.options?.[0]?.name || 'Option';
+  const optionName = product.options?.[0]?.name === 'Size' ? 'Pack size' : product.options?.[0]?.name || 'Option';
   const mediaNote = product.variants.length > 1 && !mediaState.exact ? `Product image shown. Packaging may vary for ${selected.title}.` : '';
   const gallery = `<div class="pdp-gallery"><button class="pdp-media" type="button" data-open-zoom data-zoom-src="/vitamin-express-preview/catalog/${escapeHtml(mediaState.media.local_path)}" aria-label="Enlarge ${escapeHtml(product.title)} image">${icon('zoom')}<img src="/vitamin-express-preview/catalog/${escapeHtml(mediaState.media.local_path)}" width="${mediaState.media.width || 800}" height="${mediaState.media.height || 800}" alt="${escapeHtml(mediaState.media.alt)}"></button><div class="pdp-thumbnails" aria-label="Product images">${product.media.map((media, index) => `<button type="button" data-gallery-image="/vitamin-express-preview/catalog/${escapeHtml(media.local_path)}" aria-current="${String(media.local_path === mediaState.media.local_path)}" aria-label="Show image ${index + 1} of ${product.media.length}"><img src="/vitamin-express-preview/catalog/${escapeHtml(media.local_path)}" alt="" loading="lazy"></button>`).join('')}</div><p class="media-note">${escapeHtml(mediaNote)}</p></div>`;
-  const variants = product.variants.length > 1 ? `<fieldset class="variant-group"><legend>${escapeHtml(optionName)}: <strong>${escapeHtml(selected.title)}</strong></legend><div class="variant-options">${product.variants.map((variant, index) => { const state = priceState(variant); return `<input class="variant-radio" type="radio" id="variant-${escapeHtml(product.handle)}-${index}" name="variant" value="${escapeHtml(variant.source_id)}" data-variant-option ${variant.source_id === selected.source_id ? 'checked' : ''}><label for="variant-${escapeHtml(product.handle)}-${index}" class="variant-option${variant.available_snapshot ? '' : ' is-unavailable'}"><span>${escapeHtml(variant.title)}</span><small>${moneyLabel(variant.price.amount, variant.price.currency)}${state.onSale ? ` · Save ${state.savingPercent}%` : ''}</small><b aria-hidden="true">${icon('check')}</b><em>${variant.available_snapshot ? 'Available' : 'Sold out in snapshot'}</em></label>`; }).join('')}</div></fieldset>` : '';
+  const variants = product.variants.length > 1 ? `<fieldset class="variant-group"><legend>${escapeHtml(optionName)}: <strong>${escapeHtml(selected.title)}</strong></legend><p class="pack-size-help">Choose a pack. Price updates with your selection.</p><div class="variant-options">${product.variants.map((variant, index) => { const state = priceState(variant); const unit = unitPriceLabel(product, variant); return `<input class="variant-radio" type="radio" id="variant-${escapeHtml(product.handle)}-${index}" name="variant" value="${escapeHtml(variant.source_id)}" data-variant-option ${variant.source_id === selected.source_id ? 'checked' : ''}><label for="variant-${escapeHtml(product.handle)}-${index}" class="variant-option${variant.available_snapshot ? '' : ' is-unavailable'}"><span>${escapeHtml(variant.title)}</span><small class="pack-price">${moneyLabel(variant.price.amount, variant.price.currency)}${state.onSale ? ` · ${t('Save')} ${state.savingPercent}%` : ''}</small>${unit ? `<small>${escapeHtml(unit)}</small>` : ''}<b aria-hidden="true">${icon('check')}</b><em>${variant.available_snapshot ? 'Available' : 'Sold out in snapshot'}</em></label>`; }).join('')}</div><p class="sr-only" data-variant-status role="status"></p></fieldset>` : '';
   const attributes = sourceBackedAttributes(product);
   const unitPrice = unitPriceLabel(product, selected);
   const discovery = productDiscoverySets(product);
@@ -1032,7 +1123,7 @@ function productPage(handle, params) {
         <form class="product-form" data-product-form data-handle="${escapeHtml(product.handle)}">${variants}
           <div class="pdp-buy-row"><div class="quantity-field"><label for="pdp-quantity">Quantity</label><span class="quantity-stepper"><button type="button" data-pdp-qty="-1" aria-label="Decrease quantity">−</button><input id="pdp-quantity" type="number" name="quantity" value="1" min="1" max="20" inputmode="numeric"><button type="button" data-pdp-qty="1" aria-label="Increase quantity">+</button></span></div><button class="button pdp-add-button" type="submit" ${selected.available_snapshot?'':'disabled'}>${selected.available_snapshot?'Add to cart':'Sold out'}</button><button class="pdp-wishlist" type="button" data-wishlist-preview aria-label="Save ${escapeHtml(product.title)} for later">${icon('heart')}</button></div>
           <p class="form-note">Choose your quantity, then add this exact option to your cart.</p></form>
-        <div class="pdp-service-notes"><div>${icon('cart')}<span><strong>Clear cart identity</strong>The selected option, current price and quantity stay synchronized.</span></div><div>${icon('shield')}<span><strong>Policy details before checkout</strong>Shipping and return eligibility remain visible without an unverified promise.</span></div></div>
+        ${purchaseReassurance()}
         <div class="mobile-buy-bar" aria-label="Mobile purchase actions"><div><small>${escapeHtml(selected.title === 'Default Title' ? product.vendor : selected.title)}</small>${priceMarkup(selected, { compact: true })}</div><button class="button" type="button" data-mobile-add data-handle="${escapeHtml(product.handle)}" data-variant="${escapeHtml(selected.source_id)}" ${selected.available_snapshot?'':'disabled'}>${selected.available_snapshot?'Add to cart':'Sold out'}</button></div>
         <div class="disclaimer">Source product information is shown for management review. Label wording, claims, warnings and production rights require merchant/qualified approval before launch.</div>
         <div class="product-content pdp-details" aria-label="Product information">${disclosureRows}</div>
@@ -1149,6 +1240,7 @@ function render() {
   }
   document.documentElement.lang = getLocale();
   localize(app);
+  syncComparison();
   document.querySelector('.skip-link').textContent = t('Skip to content');
   render.lastUrl = location.href;
   document.title = `${parts.length ? (document.querySelector('h1')?.textContent || 'Storefront') : 'Vitamin Express'} — Vitamin Express Canada`;
@@ -1177,11 +1269,19 @@ function render() {
   });
 }
 
-function updateParams(mutator) {
+function updateParams(mutator, { preserveScroll = false } = {}) {
   const { path, params } = parseRoute();
   mutator(params);
   const query = params.toString();
-  location.hash = `${path}${query ? `?${query}` : ''}`;
+  const hash = `#${path}${query ? `?${query}` : ''}`;
+  if (preserveScroll) {
+    const scroll = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || '{}');
+    scroll[hash] = scrollY;
+    sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll));
+    history.pushState(null, '', hash);
+    previousHash = hash;
+    render();
+  } else location.hash = hash;
 }
 
 function changeLanguage(nextLocale, nextCurrency = getPreferences().currency) {
@@ -1208,6 +1308,7 @@ function changeLanguage(nextLocale, nextCurrency = getPreferences().currency) {
 }
 
 function updateVariantParam(variantId) {
+  const quantity = document.querySelector('#pdp-quantity')?.value || '1';
   const { path, params } = parseRoute();
   params.set('variant', variantId);
   const nextHash = `#${path}?${params.toString()}`;
@@ -1217,6 +1318,12 @@ function updateVariantParam(variantId) {
   history.pushState(null, '', nextHash);
   previousHash = nextHash;
   render();
+  document.querySelector('#pdp-quantity').value = quantity;
+  requestAnimationFrame(() => {
+    document.querySelector('[data-variant-option]:checked')?.focus({ preventScroll: true });
+    const status = document.querySelector('[data-variant-status]');
+    if (status) status.textContent = `${document.querySelector('.variant-group strong').textContent} · ${document.querySelector('.pdp-price-block .current-price').textContent}`;
+  });
 }
 
 function queueMutation(button, operation) {
@@ -1236,6 +1343,19 @@ function queueMutation(button, operation) {
 }
 
 app.addEventListener('submit', (event) => {
+  if (event.target.matches('[data-price-range]')) {
+    event.preventDefault();
+    const form = event.target;
+    const min = Number(form.elements.min.value);
+    const max = Number(form.elements.max.value);
+    if (min > max) { form.elements.max.setCustomValidity(t('Maximum price must be at least the minimum price.')); form.reportValidity(); return; }
+    updateParams(params => {
+      params.delete('price');
+      params.set('min', (min / Number(form.dataset.rate)).toFixed(6));
+      params.set('max', (max / Number(form.dataset.rate)).toFixed(6));
+    }, { preserveScroll: !matchMedia('(max-width: 700px)').matches });
+    return;
+  }
   if (event.target.matches('[data-delivery-form]')) {
     event.preventDefault();
     const form = event.target;
@@ -1431,6 +1551,25 @@ function closeSettings() {
 }
 
 app.addEventListener('click', (event) => {
+  const compareDialog = document.querySelector('#product-comparison');
+  if (event.target.closest('[data-open-comparison]')) {
+    compareDialog.innerHTML = comparisonMarkup();
+    localize(compareDialog);
+    compareDialog.showModal();
+    compareDialog.querySelector('[data-close-comparison]').focus({preventScroll:true});
+    document.body.classList.add('drawer-open');
+  }
+  if (event.target.closest('[data-close-comparison]') || event.target === compareDialog) compareDialog.close();
+  if (event.target.closest('#product-comparison a')) {
+    compareDialog.close();
+    document.body.classList.remove('drawer-open');
+  }
+  const removeComparison = event.target.closest('[data-remove-comparison]');
+  if (removeComparison || event.target.closest('[data-clear-comparison]')) {
+    comparedHandles = removeComparison ? comparedHandles.filter(handle => handle !== removeComparison.dataset.removeComparison) : [];
+    syncComparison();
+  }
+  if (event.target.closest('[data-reset-price]')) updateParams(params => { params.delete('min'); params.delete('max'); params.delete('price'); }, {preserveScroll: !matchMedia('(max-width: 700px)').matches});
   const deliveryTrigger = event.target.closest('[data-open-delivery]');
   if (deliveryTrigger) { openDelivery(deliveryTrigger); return; }
   if (event.target.closest('[data-close-delivery]')) { document.querySelector('#delivery-preview').close(); return; }
@@ -1549,7 +1688,8 @@ app.addEventListener('click', (event) => {
   if (removeFacet) updateParams((params) => {
     const key = removeFacet.dataset.param;
     const value = removeFacet.dataset.value;
-    if (['price', 'available'].includes(key)) params.delete(key);
+    if (key === 'range') { params.delete('min'); params.delete('max'); }
+    else if (['price', 'available'].includes(key)) params.delete(key);
     else {
       const keep = params.getAll(key).filter((item) => item !== value);
       params.delete(key);
@@ -1559,6 +1699,7 @@ app.addEventListener('click', (event) => {
 });
 
 app.addEventListener('input', (event) => {
+  if (event.target.matches('[data-price-range] input')) updatePriceInputs(event.target);
   if (event.target.matches('[data-order-note]')) updateOrderNote(event.target.value);
   if (event.target.matches('[data-delivery-form] input')) {
     locationRequest?.abort();
@@ -1671,6 +1812,22 @@ app.addEventListener('close', (event) => {
 }, true);
 
 app.addEventListener('change', (event) => {
+  if (event.target.matches('[data-compare-product]')) {
+    const handle = event.target.dataset.compareProduct;
+    comparedHandles = comparedHandles.filter(item => item !== handle);
+    if (event.target.checked && comparedHandles.length < 3) comparedHandles.push(handle);
+    syncComparison();
+  }
+  if (event.target.matches('[data-compare-variant]')) {
+    const handle = event.target.dataset.compareVariant;
+    comparedVariants.set(handle, event.target.value);
+    const modal = event.target.closest('dialog');
+    const left = modal.querySelector('.comparison-scroll').scrollLeft;
+    modal.innerHTML = comparisonMarkup();
+    localize(modal);
+    modal.querySelector(`[data-compare-variant="${handle}"]`).focus({preventScroll:true});
+    modal.querySelector('.comparison-scroll').scrollLeft = left;
+  }
   if (event.target.matches('[data-delivery-form] select')) {
     locationRequest?.abort();
     const form = event.target.closest('form');
