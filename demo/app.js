@@ -197,6 +197,18 @@ function showInfo(title, body, action = '') {
   document.body.classList.remove('drawer-open');
   dialogOpener = document.activeElement;
   dialogContent.innerHTML = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(body)}</p>${action}<button class="button secondary" type="button" data-close-dialog>Close</button>`;
+  const mobileMenu = dialogContent.querySelector('.mobile-menu-panel');
+  dialog.classList.toggle('mobile-navigation-dialog', Boolean(mobileMenu));
+  if (mobileMenu) {
+    const close = dialogContent.querySelector('[data-close-dialog]');
+    close.className = 'icon-button';
+    close.setAttribute('aria-label', 'Close');
+    close.innerHTML = icon('close');
+    const header = document.createElement('header');
+    header.className = 'mobile-menu-heading';
+    header.append(dialogContent.querySelector('h2'), close);
+    dialogContent.prepend(header);
+  }
   localize(dialogContent);
   dialog.showModal();
   dialog.querySelector('[data-close-dialog]')?.focus();
