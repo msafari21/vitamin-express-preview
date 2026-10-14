@@ -32,6 +32,7 @@ let deliveryReturnToCart = false;
 let locationRequest;
 let pendingCartDrawer = false;
 let heroTimer;
+let brandTimer;
 let heroTouchStartX = null;
 let offerTimer;
 let megaHoverTimer;
@@ -115,6 +116,8 @@ function icon(name) {
   const paths = {
     location: '<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/>',
     chevron: '<path d="m5 9 7 7 7-7"/>',
+    pause: '<path d="M9 5v14M15 5v14"/>',
+    play: '<path d="m8 5 11 7-11 7Z"/>',
     user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-4 3-6 7-6s6.4 2 7 6"/>',
     bag: '<path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/>',
     cart: '<path d="M3 4h2l2.1 9.7a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/>',
@@ -424,9 +427,56 @@ function comparisonMarkup() {
 }
 
 function brandsShelf() {
-  const brands = ['AOR', 'NOW', 'Genestra', 'New Roots', 'Natural Factors', 'A. Vogel'];
-  const products = brands.map(brand => catalog.products.find(product => product.vendor === brand)).filter(Boolean);
-  return `<section class="section brands-shelf" aria-labelledby="brands-shelf-title"><div class="section-head"><div><p class="eyebrow">Find your favourites</p><h2 id="brands-shelf-title">Brands we carry</h2></div><a href="#/brands">Explore all brands →</a></div><div class="brands-shelf-grid">${products.map(product => `<a href="#/brand/${slugify(product.vendor)}"><img src="${productImage(product)}" width="64" height="72" alt="" loading="lazy"><span><strong>${escapeHtml(product.vendor)}</strong><small>Shop the range <span aria-hidden="true">→</span></small></span></a>`).join('')}</div></section>`;
+  const brands = [
+    ['AOR', 'aor.webp'], ['Natural Factors', 'natural-factors.svg'],
+    ['Genestra', 'genestra.png'], ['New Roots', 'new-roots.webp'],
+    ['Organic Traditions', 'organic-traditions.svg'], ['New Chapter', 'new-chapter.png'],
+    ['Progressive Nutritional', 'progressive.png'], ['Pascoe', 'pascoe.webp'],
+  ].filter(([brand]) => catalog.products.some(product => product.vendor === brand));
+  return `<section class="section brands-shelf" data-brand-carousel aria-labelledby="brands-shelf-title" aria-roledescription="carousel"><div class="section-head"><div><p class="eyebrow">Find your favourites</p><h2 id="brands-shelf-title">Brands we carry</h2></div><div class="brands-shelf-actions"><a href="#/brands">Explore all brands →</a><div class="rail-actions"><button class="rail-arrow" type="button" data-brand-step="-1" aria-label="Previous brands">←</button><button class="rail-arrow brand-pause" type="button" data-brand-pause aria-label="Pause brand rotation">${icon('pause')}</button><button class="rail-arrow" type="button" data-brand-step="1" aria-label="Next brands">→</button></div></div></div><div class="brands-shelf-grid" tabindex="0" aria-label="Shop by brand">${brands.map(([brand, file]) => `<a href="#/brand/${slugify(brand)}" aria-label="${escapeHtml(brand)}"><img src="/vitamin-express-preview/shared/assets/brand-logos/${file}" width="200" height="80" alt="${escapeHtml(brand)}" loading="lazy" decoding="async"></a>`).join('')}</div></section>`;
+}
+
+function setupBrandCarousel() {
+  clearInterval(brandTimer);
+  const carousel = document.querySelector('[data-brand-carousel]');
+  if (!carousel) return;
+  const track = carousel.querySelector('.brands-shelf-grid');
+  const pause = carousel.querySelector('[data-brand-pause]');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let paused = reduced.matches;
+  let hovered = false;
+  let direction = 1;
+  let resumeAfter = 0;
+  const updatePause = () => {
+    pause.innerHTML = icon(paused ? 'play' : 'pause');
+    pause.setAttribute('aria-label', t(paused ? 'Start brand rotation' : 'Pause brand rotation'));
+  };
+  updatePause();
+  const updateArrows = () => {
+    carousel.querySelector('[data-brand-step="-1"]').disabled = track.scrollLeft <= 8;
+    carousel.querySelector('[data-brand-step="1"]').disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 8;
+  };
+  track.addEventListener('scroll', updateArrows, {passive:true});
+  updateArrows();
+  const advance = (step) => {
+    const end = track.scrollWidth - track.clientWidth;
+    const distance = track.querySelector('a').getBoundingClientRect().width + parseFloat(getComputedStyle(track).columnGap);
+    if (step > 0 && track.scrollLeft >= end - 8) direction = -1;
+    else if (step < 0 && track.scrollLeft <= 8) direction = 1;
+    else direction = step;
+    track.scrollBy({ left: distance * direction, behavior: reduced.matches ? 'instant' : 'smooth' });
+  };
+  carousel.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') hovered = true; });
+  carousel.addEventListener('pointerleave', () => { hovered = false; resumeAfter = Date.now() + 3800; });
+  carousel.addEventListener('pointerdown', () => { resumeAfter = Date.now() + 6000; });
+  track.addEventListener('wheel', () => { resumeAfter = Date.now() + 6000; }, {passive:true});
+  pause.addEventListener('click', () => { paused = !paused; updatePause(); });
+  carousel.querySelectorAll('[data-brand-step]').forEach(button => button.addEventListener('click', () => advance(Number(button.dataset.brandStep))));
+  brandTimer = setInterval(() => {
+    const bounds = carousel.getBoundingClientRect();
+    if (paused || hovered || document.hidden || Date.now() < resumeAfter || carousel.contains(document.activeElement) || document.querySelector('dialog[open]') || bounds.bottom <= 0 || bounds.top >= innerHeight) return;
+    advance(direction);
+  }, 3800);
 }
 
 function purchaseReassurance() {
@@ -1260,6 +1310,7 @@ function render() {
     updateCompactHeader();
     updateHeaderFit();
     setupHeroCarousel();
+    setupBrandCarousel();
     setupOfferCountdown();
     document.querySelectorAll('[data-rail-id]').forEach((button) => syncRailButtons(button.dataset.railId));
     if (pendingCartDrawer) {

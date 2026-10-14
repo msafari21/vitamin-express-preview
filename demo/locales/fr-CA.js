@@ -1,5 +1,7 @@
 // Canadian French interface copy. Catalog names, variants and manufacturer text remain source data.
 export default {
+  'Previous brands': 'Marques précédentes', 'Next brands': 'Marques suivantes',
+  'Pause brand rotation': 'Mettre les marques en pause', 'Start brand rotation': 'Faire défiler les marques',
   'Wellness advice & guides': 'Conseils et guides bien-être',
   'Find your favourites': 'Retrouvez vos favoris', 'Brands we carry': 'Nos marques',
   'Explore all brands →': 'Voir toutes les marques →', 'Shop the range': 'Voir les produits',

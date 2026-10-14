@@ -144,12 +144,18 @@
 .purchase-reassurance .icon { width: 1.2rem; height: 1.2rem; }
 .purchase-reassurance .icon:last-child { width: .85rem; transform: rotate(-90deg); }
 .brands-shelf { padding-block: 1rem; }
-.brands-shelf-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: .7rem; }
-.brands-shelf-grid > a { min-height: 6.5rem; padding: .7rem; display: flex; align-items: center; gap: .5rem; border: 1px solid #e0e8d8; border-radius: .8rem; background: white; text-decoration: none; }
-.brands-shelf-grid > a:hover { border-color: #91ac76; background: #fbfdf8; }
-.brands-shelf-grid img { width: 3rem; height: 4.5rem; object-fit: contain; }
-.brands-shelf-grid strong { display: block; font-size: .88rem; }
-.brands-shelf-grid small { display: block; margin-top: .35rem; font-size: .67rem; color: var(--ve-ink-soft); }
+.brands-shelf-actions { display: flex; align-items: center; gap: 1.2rem; }
+.brands-shelf .rail-actions { gap: .35rem; }
+.brands-shelf .rail-arrow { width: 2.75rem; height: 2.75rem; }
+.brand-pause .icon { width: 1rem; height: 1rem; }
+.brands-shelf-grid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 5rem) / 6); gap: 1rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; padding: .25rem; border-block: 1px solid #e6ecdf; }
+.brands-shelf-grid::-webkit-scrollbar { display: none; }
+.brands-shelf-grid > a { min-width: 0; height: 7.5rem; padding: 1.25rem 1rem; display: grid; place-items: center; border-radius: .7rem; background: white; scroll-snap-align: start; text-decoration: none; transition: background-color .18s ease; }
+.brands-shelf-grid > a:hover { background: #f7faf2; }
+.brands-shelf-grid img { width: 100%; max-width: 10rem; height: 4.2rem; object-fit: contain; transition: transform .18s ease; }
+.brands-shelf-grid img[src$="/genestra.png"], .brands-shelf-grid img[src$="/new-chapter.png"] { filter: brightness(0); opacity: .85; }
+.brands-shelf-grid > a:hover img { transform: translateY(-2px); }
+.brands-shelf-grid a:focus-visible { outline: 2px solid var(--ve-brand); outline-offset: -3px; }
 .comparison-hint { margin: 0 0 .5rem; color: var(--ve-ink-soft); font-size: .8rem; }
 .compare-choice { display: flex; align-items: center; gap: .4rem; width: fit-content; min-height: 2.75rem; color: var(--ve-ink-soft); font-size: .78rem; cursor: pointer; }
 .compare-choice input { width: 1rem; height: 1rem; accent-color: var(--ve-brand); }
@@ -181,12 +187,14 @@
 .comparison-scroll select { width: 100%; min-height: 2.75rem; font-size: 1rem; padding: .4rem; border: 1px solid #cfdcc4; border-radius: .4rem; background: white; }
 .comparison-scroll .current-price { font-size: 1rem; }
 .comparison-scroll-hint { display: none; }
-@media (max-width: 1100px) { .brands-shelf-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 1100px) { .brands-shelf-grid { grid-auto-columns: calc((100% - 3rem) / 4); } }
 @media (max-width: 700px) {
-  .brands-shelf-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem; }
-  .brands-shelf-grid > a { min-height: 5.4rem; padding: .5rem; }
-  .brands-shelf-grid img { width: 2.6rem; height: 3.8rem; }
-  .brands-shelf-grid strong { font-size: .8rem; }
+  .brands-shelf .section-head { align-items: start; }
+  .brands-shelf-actions { width: 100%; justify-content: space-between; gap: .5rem; }
+  .brands-shelf-actions > a { font-size: .8rem; }
+  .brands-shelf-grid { grid-auto-columns: calc((100% - 1rem) / 2.2); gap: .75rem; }
+  .brands-shelf-grid > a { height: 6rem; padding: .8rem .5rem; }
+  .brands-shelf-grid img { height: 3.5rem; }
   .comparison-tray { width: calc(100% - 1rem); bottom: .5rem; gap: .4rem; padding: .6rem; }
   .comparison-tray strong { font-size: .8rem; }
   .comparison-tray small { font-size: .63rem; }
@@ -210,3 +218,4 @@
   .comparison-scroll .current-price { font-size: .85rem; }
   .comparison-dialog:has(thead th:nth-of-type(3)) .comparison-scroll-hint { display: block; padding: 0 .75rem; margin: 0 0 .6rem; font-size: .7rem; color: var(--ve-brand); }
 }
+@media (prefers-reduced-motion: reduce) { .brands-shelf-grid img, .brands-shelf-grid > a { transition: none; } .brands-shelf-grid > a:hover img { transform: none; } }
