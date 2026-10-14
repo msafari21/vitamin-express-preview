@@ -437,7 +437,7 @@ function brandsShelf() {
 }
 
 function setupBrandCarousel() {
-  clearInterval(brandTimer);
+  cancelAnimationFrame(brandTimer);
   const carousel = document.querySelector('[data-brand-carousel]');
   if (!carousel) return;
   const track = carousel.querySelector('.brands-shelf-grid');
@@ -445,38 +445,56 @@ function setupBrandCarousel() {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let paused = reduced.matches;
   let hovered = false;
-  let direction = 1;
   let resumeAfter = 0;
+  // A second visual set lets the strip wrap without a visible rewind.
+  const originals = [...track.children];
+  originals.forEach(link => {
+    const copy = link.cloneNode(true);
+    copy.setAttribute('aria-hidden', 'true');
+    copy.tabIndex = -1;
+    track.append(copy);
+  });
+  const cycleWidth = () => track.children[originals.length].getBoundingClientRect().left - originals[0].getBoundingClientRect().left;
+  let position = track.scrollLeft;
+  let lastWritten = position;
+  let lastFrame = performance.now();
   const updatePause = () => {
     pause.innerHTML = icon(paused ? 'play' : 'pause');
     pause.setAttribute('aria-label', t(paused ? 'Start brand rotation' : 'Pause brand rotation'));
   };
   updatePause();
-  const updateArrows = () => {
-    carousel.querySelector('[data-brand-step="-1"]').disabled = track.scrollLeft <= 8;
-    carousel.querySelector('[data-brand-step="1"]').disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 8;
-  };
-  track.addEventListener('scroll', updateArrows, {passive:true});
-  updateArrows();
   const advance = (step) => {
-    const end = track.scrollWidth - track.clientWidth;
     const distance = track.querySelector('a').getBoundingClientRect().width + parseFloat(getComputedStyle(track).columnGap);
-    if (step > 0 && track.scrollLeft >= end - 8) direction = -1;
-    else if (step < 0 && track.scrollLeft <= 8) direction = 1;
-    else direction = step;
-    track.scrollBy({ left: distance * direction, behavior: reduced.matches ? 'instant' : 'smooth' });
+    const cycle = cycleWidth();
+    if (track.scrollLeft >= cycle) track.scrollLeft -= cycle;
+    if (step < 0 && track.scrollLeft < distance) track.scrollLeft += cycle;
+    resumeAfter = Date.now() + 6000;
+    track.scrollBy({ left: distance * step, behavior: reduced.matches ? 'instant' : 'smooth' });
   };
   carousel.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') hovered = true; });
-  carousel.addEventListener('pointerleave', () => { hovered = false; resumeAfter = Date.now() + 3800; });
+  carousel.addEventListener('pointerleave', () => { hovered = false; resumeAfter = Date.now() + 800; });
   carousel.addEventListener('pointerdown', () => { resumeAfter = Date.now() + 6000; });
   track.addEventListener('wheel', () => { resumeAfter = Date.now() + 6000; }, {passive:true});
   pause.addEventListener('click', () => { paused = !paused; updatePause(); });
   carousel.querySelectorAll('[data-brand-step]').forEach(button => button.addEventListener('click', () => advance(Number(button.dataset.brandStep))));
-  brandTimer = setInterval(() => {
+  const animate = (now) => {
+    if (!carousel.isConnected) return;
+    const elapsed = Math.min(now - lastFrame, 48);
+    lastFrame = now;
+    brandTimer = requestAnimationFrame(animate);
     const bounds = carousel.getBoundingClientRect();
-    if (paused || hovered || document.hidden || Date.now() < resumeAfter || carousel.contains(document.activeElement) || document.querySelector('dialog[open]') || bounds.bottom <= 0 || bounds.top >= innerHeight) return;
-    advance(direction);
-  }, 3800);
+    const current = track.scrollLeft;
+    if (paused || hovered || document.hidden || Date.now() < resumeAfter || carousel.contains(document.activeElement) || document.querySelector('dialog[open]') || bounds.bottom <= 0 || bounds.top >= innerHeight) {
+      position = lastWritten = current;
+      return;
+    }
+    if (Math.abs(current - lastWritten) > 1) position = current;
+    // Keep fractional pixels between frames; scrollLeft itself may be rounded.
+    position = (position + elapsed * .024) % cycleWidth();
+    track.scrollLeft = position;
+    lastWritten = track.scrollLeft;
+  };
+  brandTimer = requestAnimationFrame(animate);
 }
 
 function purchaseReassurance() {
