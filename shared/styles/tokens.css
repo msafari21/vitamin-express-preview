@@ -1,0 +1,36 @@
+:root {
+  --ve-ink: #202622;
+  --ve-ink-soft: #5a625d;
+  --ve-paper: #fafaf7;
+  --ve-surface: #ffffff;
+  --ve-surface-soft: #f2f4f0;
+  --ve-line: #dfe3df;
+  --ve-brand: #113d2e;
+  --ve-brand-strong: #0a2d21;
+  --ve-brand-deep: #071f17;
+  --ve-lime: #9fcc3c;
+  --ve-lime-soft: #eaf6c8;
+  --ve-focus: #176b87;
+  --ve-interface-blue: #176b87;
+  --ve-interface-blue-soft: #e8f4f7;
+  --ve-campaign-peach: #fff0e5;
+  --ve-campaign-lilac: #eee9f8;
+  --ve-campaign-sky: #e6f2fa;
+  --ve-campaign-yellow: #fff2c6;
+  --ve-campaign-coral: #f26b4a;
+  --ve-campaign-coral-soft: #ffe1d8;
+  --ve-campaign-gold: #f7c948;
+  --ve-campaign-purple: #8c7ad1;
+  --ve-campaign-mint: #dcefd8;
+  --ve-campaign-blue: #236789;
+  --ve-danger: #a52b38;
+  --ve-success: #2d6f4e;
+  --ve-warning: #8a5a00;
+  --ve-radius-sm: 0.5rem;
+  --ve-radius: 0.75rem;
+  --ve-radius-lg: 1.25rem;
+  --ve-shadow: 0 18px 50px rgba(32, 38, 34, 0.12);
+  --ve-page: min(92rem, calc(100% - 2rem));
+  --ve-font-display: "DM Sans", "Segoe UI", Arial, sans-serif;
+  --ve-font-body: "DM Sans", "Segoe UI", Arial, sans-serif;
+}

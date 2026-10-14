@@ -1,0 +1,98 @@
+/* Bright storefront presentation. Behaviour and layout stay in storefront.css. */
+:root {
+  --ve-paper: #fff;
+  --ve-surface-soft: #f6f9f5;
+  --ve-line: #dce5da;
+  --ve-lime: #b7de54;
+  --ve-lime-soft: #f0f8de;
+  --ve-campaign-peach: #fff6ee;
+  --ve-campaign-lilac: #f5f1fb;
+  --ve-campaign-sky: #eff8fc;
+  --ve-campaign-yellow: #fff9e6;
+  --ve-campaign-mint: #eef8e9;
+  --ve-campaign-coral-soft: #fff0e9;
+  --ve-shadow: 0 12px 32px rgba(32,60,42,.1);
+}
+
+/* A slow colour crossfade, never a change to text, size or position. */
+.utility-strip { isolation: isolate; background: linear-gradient(110deg,#daf09e,#eaf6c4 55%,#d8efd9); color: var(--ve-brand-deep); }
+.utility-strip::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(110deg,#c6e882,#def0bc 55%,#c8eacb); opacity: .2; animation: utility-colour-breathe 12s ease-in-out infinite alternate; }
+.utility-strip:hover::before, .utility-strip:focus-within::before { animation-play-state: paused; }
+@keyframes utility-colour-breathe { from { opacity: .2; } to { opacity: .9; } }
+.utility-benefits > span, .utility-benefits > a, .utility-strip a, .utility-strip button { color: var(--ve-brand-deep); }
+.utility-benefits small { color: #425b39; }
+.utility-benefits .icon { color: #426b27; }
+.utility-strip .language-switch button { opacity: 1; color: #425b39; }
+.utility-strip .language-switch button[aria-pressed="true"] { color: var(--ve-brand-deep); }
+.utility-strip .language-switch button:focus-visible { outline-color: var(--ve-focus); }
+.utility-benefits > .canadian-owned-chip { color: var(--ve-brand-deep); border-color: rgba(255,255,255,.85); background: linear-gradient(135deg,rgba(255,255,255,.72),rgba(255,255,255,.3)); box-shadow: inset 0 1px 0 #fff,0 2px 6px rgba(45,76,23,.08); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-weight: 650; transition: background .18s ease,border-color .18s ease; }
+.utility-benefits > .canadian-owned-chip:hover, .utility-benefits > .canadian-owned-chip:focus-visible { border-color: #97b75a; background: rgba(255,255,255,.85); text-decoration: none; }
+
+/* White header, original logo silhouette and unchanged compact-header geometry. */
+.site-header { background: white; border-bottom-color: var(--ve-line); box-shadow: 0 3px 12px rgba(32,60,42,.035); }
+.header-action, .site-header .icon-button, .site-header .icon-link { color: var(--ve-brand); }
+.header-action:hover, .site-header .icon-button:hover, .site-header .icon-link:hover { border-color: var(--ve-line); background: var(--ve-lime-soft); }
+.header-action:active { background: #e8f2d7; }
+.cart-count { border-color: white; }
+.nav-row { border-top-color: #edf1eb; }
+.search-box select { background: #f6f8f3; border-radius: .7rem 0 0 .7rem; }
+.search-box button { border-radius: 0 .7rem .7rem 0; }
+.search-box button:hover { background: #c4e776; }
+.flash-sale-bar { background: #f5faee; border-bottom-color: #e7eedc; }
+.flash-sale-bar__message > span { background: white; border-color: #edd8c8; }
+
+/* Keep images and interactive product placements; soften the large colour fields. */
+.hero { background: color-mix(in srgb,var(--hero-bg) 19%,white); }
+.hero::before { background: color-mix(in srgb,var(--hero-accent) 24%,white); }
+.hero-stage::after { background: linear-gradient(90deg,color-mix(in srgb,var(--hero-bg) 18%,white) 0%,transparent 26%); }
+.campaign-badge { border: 1px solid rgba(17,61,46,.1); border-radius: 999px; }
+.deals-showcase, .category-hub-hero { background: #f5faef; border-color: #e0ead7; border-radius: 1rem; }
+.deals-showcase::after, .category-hub-hero::after { opacity: .45; }
+.canadian-owned-campaign { background: #f5f9e8; }
+.product-card { border-radius: .75rem; }
+.product-card.is-sale { background: white; border-color: #edf0e8; }
+.product-card.is-sale .product-image { background: white; border-color: var(--ve-line); }
+.product-card.is-sale:hover, .product-card.is-sale:focus-within { border-color: #cfdeb9; box-shadow: 0 .6rem 1.4rem rgba(32,60,42,.07); }
+.editorial-feature { background: #fcfdf6; border-color: #e2e8d7; }
+.editorial-art { background: linear-gradient(145deg,#fff 0 36%,#f3f7e6 36% 100%); }
+
+/* Consistent lime purchase actions; secondary actions remain white. */
+.button, .button.campaign, .button.signal, .pdp-add-button { background: var(--ve-lime); border-color: var(--ve-lime); color: var(--ve-brand-deep); font-weight: 700; }
+.button:hover, .button.campaign:hover, .button.signal:hover, .pdp-add-button:hover { background: #c4e776; border-color: #a1c54b; color: var(--ve-brand-deep); }
+.button:active, .pdp-add-button:active { background: #a6ce48; border-color: #91b63b; color: var(--ve-brand-deep); }
+.button.secondary { background: white; color: var(--ve-brand); border-color: #acbfa2; }
+.button.secondary:hover { background: var(--ve-surface-soft); border-color: #789166; }
+.chat-launcher { background: var(--ve-lime); border-color: #a5ca49; color: var(--ve-brand-deep); box-shadow: 0 .35rem 1rem rgba(32,60,42,.12); }
+.chat-launcher:hover { background: #c4e776; }
+.cart-shipping-progress__icon, .cart-shipping-progress.is-reached .cart-shipping-progress__icon { background: #e5f2c8; color: var(--ve-brand); }
+.cart-shipping-progress__track > span { background: linear-gradient(90deg,#729d37,var(--ve-lime)); }
+.cart-summary { background: #f6faef; color: var(--ve-ink); border: 1px solid var(--ve-line); }
+.cart-list { align-content: start; }
+.cart-line img { background: white; }
+.cart-summary p { color: var(--ve-ink-soft); }
+.cart-summary .button.secondary { background: white; color: var(--ve-brand); border-color: #acbfa2; }
+.cart-summary .summary-row { border-color: var(--ve-line); }
+.signin-benefits { background: #f3f8eb; color: var(--ve-ink); }
+.signin-benefits .eyebrow, .signin-benefit-list h3 { color: var(--ve-brand); }
+.signin-benefits > p, .signin-benefits small, .signin-benefit-list p { color: var(--ve-ink-soft); }
+.signin-benefits .button { border-color: #acbfa2; }
+.signin-benefit-list .icon { color: #50732e; }
+.signin-benefit-list article { border-color: var(--ve-line); }
+
+/* Light footer with clear contrast instead of a large dark block. */
+.site-footer { background: #f5f9ef; color: var(--ve-ink); border-top: 1px solid #e0e8d8; }
+.footer-intro, .footer-meta { border-color: #d8e3cf; }
+.footer-brand p, .footer-connect p, .footer-preferences small, .footer-meta { color: #52634c; }
+.site-footer .brand-lockup, .footer-connect h2, .footer-grid h2, .footer-grid h3 { color: var(--ve-brand); }
+.footer-kicker { color: #456529!important; }
+.footer-grid a { color: #344b36; }
+.footer-grid a:hover { color: #285821; }
+.footer-localization, .footer-delivery, .footer-socials button, .footer-apps button { background: rgba(255,255,255,.8); border-color: #c4d3b6; color: var(--ve-brand); }
+.footer-localization:hover, .footer-delivery:hover { background: white; border-color: #88a170; }
+@media (max-width: 900px) {
+  .mobile-buy-bar.visible { background: white; color: var(--ve-brand-deep); border-color: var(--ve-line); box-shadow: 0 5px 20px rgba(32,60,42,.12); }
+  .mobile-buy-bar small { color: var(--ve-ink-soft); }
+  .mobile-buy-bar .button { background: var(--ve-lime); color: var(--ve-brand-deep); border-color: var(--ve-lime); }
+}
+@media (prefers-reduced-motion: reduce) { .utility-strip::before { animation: none; opacity: .35; } }
+@media (forced-colors: active) { .utility-strip::before { display: none; } .utility-benefits > .canadian-owned-chip { border-color: ButtonText; } }

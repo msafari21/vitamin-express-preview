@@ -1,0 +1,253 @@
+{
+  "schema_version": 4,
+  "currency_preview": {
+    "rates_from_cad": { "CAD": 1, "USD": 0.73, "EUR": 0.67 },
+    "note": "Illustrative conversion rates for local testing only; not live exchange rates."
+  },
+  "delivery_preview": {
+    "default_country": "CA",
+    "geocode_endpoint": "",
+    "rules": [
+      { "country": "CA", "prefixes": ["X", "Y"], "price_cad": 19.95, "free_over_cad": null },
+      { "country": "CA", "price_cad": 9.95, "free_over_cad": 79 },
+      { "country": "US", "price_cad": 19.95, "free_over_cad": null }
+    ],
+    "note": "Sample shipping rules, not carrier quotes or a promise of service. Other destinations require checkout confirmation."
+  },
+  "notice": "Private demo — sample catalog — no real orders",
+  "utility_benefits": [
+    { "label": "Clear catalog pricing", "icon": "check", "href": "", "enabled": true, "conditions": "" },
+    { "label": "Shipping & delivery", "icon": "check", "href": "#/support", "enabled": true, "conditions": "See guidance" },
+    { "label": "Returns guidance", "icon": "check", "href": "#/support", "enabled": true, "conditions": "Review eligibility" }
+  ],
+  "cart_shipping_preview": {
+    "enabled": true,
+    "target_cad": 79,
+    "label": "Free-shipping progress",
+    "note": ""
+  },
+  "flash_sale": {
+    "enabled": true,
+    "badge": "Flash sale",
+    "heading": "Limited-time wellness offers",
+    "body": "Save on selected favourites while offers last",
+    "end_at": "",
+    "link_label": "Shop offers",
+    "href": "#/deals"
+  },
+  "hero": {
+    "badge": "Early fall body care",
+    "eyebrow": "The everyday body-care edit",
+    "heading": "Daily care, in brighter colour.",
+    "body": "Explore oils, creams and personal-care essentials with pack details and pricing close at hand.",
+    "background": "#F7C948",
+    "accent": "#F26B4A",
+    "primary_label": "Shop personal care",
+    "primary_href": "#/collection/beauty-and-personal-care",
+    "secondary_label": "Explore categories",
+    "secondary_href": "#/categories",
+    "lifestyle_image": "/vitamin-express-preview/shared/assets/hero-lifestyle-personal-care.webp",
+    "lifestyle_alt": "A woman enjoying a bright, natural personal-care routine",
+    "product_handles": [
+      "now-lavender-oil-30ml",
+      "now-essential-oils-lime-30ml",
+      "derma-e-eczema-relief-cream-113g"
+    ]
+  },
+  "hero_slides": [
+    {
+      "badge": "Everyday essentials",
+      "eyebrow": "Clearer supplement shopping",
+      "heading": "Compare the format, strength and pack.",
+      "body": "Browse products by exact name, available format and pack size, with pricing close to your decision.",
+      "background": "#DCEFD8",
+      "accent": "#7DBAC8",
+      "primary_label": "Shop everyday wellness",
+      "primary_href": "#/collection/everyday-wellness",
+      "secondary_label": "Browse vitamins",
+      "secondary_href": "#/collection/vitamins",
+      "lifestyle_image": "/vitamin-express-preview/shared/assets/hero-lifestyle-everyday-wellness.webp",
+      "lifestyle_alt": "A couple sharing a clear and positive everyday wellness routine",
+      "product_handles": [
+        "new-roots-vitamin-d3-2500iu-360-softgels",
+        "aor-magnesium-glycinate-vegan-non-gmo-gluten-free-360-capsules",
+        "genestra-zinc-gummies-100-gummies"
+      ]
+    },
+    {
+      "badge": "Pantry edit",
+      "eyebrow": "Food & healthy living",
+      "heading": "Everyday pantry picks, clearly presented.",
+      "body": "Explore teas, seeds and spices with pack details and pricing that are easy to compare.",
+      "background": "#EEE9F8",
+      "accent": "#F7C948",
+      "primary_label": "Shop food & pantry",
+      "primary_href": "#/collection/food-and-healthy-living",
+      "secondary_label": "See all categories",
+      "secondary_href": "#/categories",
+      "lifestyle_image": "/vitamin-express-preview/shared/assets/hero-lifestyle-pantry.webp",
+      "lifestyle_alt": "A couple preparing a colourful breakfast with pantry ingredients",
+      "product_handles": [
+        "organic-traditions-ceylon-cinnamon-powder-227g",
+        "organic-traditions-organic-jumbo-pumpkin-seeds-227g",
+        "juniper-24-bags-org"
+      ]
+    }
+  ],
+  "featured_collections": [
+    "Vitamins",
+    "Minerals",
+    "Beauty & Personal Care",
+    "Food & Healthy Living"
+  ],
+  "category_cards": [
+    { "family": "Vitamins", "product_handle": "new-roots-vitamin-d3-2500iu-360-softgels", "tone": "peach" },
+    { "family": "Minerals", "product_handle": "aor-magnesium-glycinate-vegan-non-gmo-gluten-free-360-capsules", "tone": "lilac" },
+    { "family": "Beauty & Personal Care", "product_handle": "annemarie-borlind-hand-balsam-50ml", "tone": "sky" },
+    { "family": "Food & Healthy Living", "product_handle": "organic-traditions-organic-jumbo-pumpkin-seeds-227g", "tone": "yellow" },
+    { "family": "Digestive & Gut Health", "product_handle": "nphrm-m5-60s", "tone": "mint" },
+    { "family": "Everyday Wellness", "product_handle": "sisu-multi-teens-90-chew-tabs", "tone": "coral" }
+  ],
+  "homepage_discovery_tiles": [
+    { "title": "Sun care", "href": "#/collection/beauty-and-personal-care", "tone": "sky", "product_handles": ["st-francis-herbs-skin-defend-uv-skin-support-60-vege-capsules", "st-francis-herbs-skin-harmony-face-oil-blend-30-ml-topical-oil", "derma-e-eczema-relief-cream-113g"] },
+    { "title": "Hydration", "href": "#/collection/minerals", "tone": "peach", "product_handles": ["salus-calcium-magnesium-500ml-250ml", "aor-magnesium-glycinate-vegan-non-gmo-gluten-free-360-capsules", "magtein-magnesium-l-threonate-90-veg-capsules"] },
+    { "title": "Summer snacks", "href": "#/collection/food-and-healthy-living", "tone": "yellow", "product_handles": ["organic-traditions-organic-jumbo-pumpkin-seeds-227g", "organic-traditions-black-sesame-seeds-454g", "organic-traditions-ceylon-cinnamon-powder-227g"] },
+    { "title": "K-Beauty", "href": "#/collection/beauty-and-personal-care", "tone": "lilac", "product_handles": ["annemarie-borlind-hand-balsam-50ml", "st-francis-herbs-skin-harmony-face-oil-blend-30-ml-topical-oil", "derma-e-eczema-relief-cream-113g"] },
+    { "title": "Personal care", "href": "#/collection/beauty-and-personal-care", "tone": "peach", "product_handles": ["naka-100-pure-sweet-almond-moisturizing-oil-130ml", "now-lavender-oil-30ml", "derma-e-eczema-relief-cream-113g"] },
+    { "title": "Sleep & stress", "href": "#/collection/everyday-wellness", "tone": "mint", "product_handles": ["aor-ps-100-100-mg-60-vegi-caps", "aor-magnesium-glycinate-vegan-non-gmo-gluten-free-360-capsules", "magtein-magnesium-l-threonate-90-veg-capsules"] },
+    { "title": "Vitamins", "href": "#/collection/vitamins", "tone": "yellow", "product_handles": ["new-roots-vitamin-d3-2500iu-360-softgels", "gen-vitamin-d3-1000-90-chewable-tablets", "sisu-multi-teens-90-chew-tabs"] },
+    { "title": "Weight management", "href": "#/collection/sports-nutrition", "tone": "peach", "product_handles": ["natural-factors-vegan-protein-vanilla-bean-1-kg", "prairie-naturals-sport-leanwhey-protein-chocolate-supreme-908g", "metagenics-ultraclear-vanilla-840-grams"] },
+    { "title": "Keto essentials", "href": "#/collection/food-and-healthy-living", "tone": "yellow", "product_handles": ["organic-traditions-organic-jumbo-pumpkin-seeds-227g", "ot-black-sesame-seeds-227g", "organic-traditions-ceylon-cinnamon-powder-227g"] },
+    { "title": "Glow ingredients", "href": "#/collection/beauty-and-personal-care", "tone": "sky", "product_handles": ["new-roots-seabuckthorn-oil-30-softgels", "now-essential-oils-lime-30ml", "st-francis-herbs-skin-harmony-face-oil-blend-30-ml-topical-oil"] }
+  ],
+  "featured_products": [
+    "aor-benfotiamine-300-30-capsules-vitamin-b1",
+    "genestra-zinc-gummies-100-gummies",
+    "progressive-perfect-probiotic-60-billion-60-veg-capsules",
+    "nutrasea-omega-3-liquid-gels-100-softgels",
+    "new-roots-seabuckthorn-oil-30-softgels",
+    "now-castor-oil-fennel",
+    "genestra-milk-thistle-tincture-60ml",
+    "designs-for-health-foresterol-90-capsules"
+  ],
+  "wide_campaign": {
+    "eyebrow": "Sports nutrition",
+    "heading": "Two protein formats. One clearer comparison.",
+    "body": "Compare pack size, format and price before choosing.",
+    "label": "Compare sports nutrition",
+    "href": "#/collection/sports-nutrition",
+    "product_handles": [
+      "prairie-naturals-sport-leanwhey-protein-chocolate-supreme-908g",
+      "natural-factors-vegan-protein-vanilla-bean-1-kg"
+    ]
+  },
+  "thematic_shelf": {
+    "eyebrow": "Growing well, every day",
+    "heading": "Kids & family essentials",
+    "body": "Compare age-appropriate gummies, chewables and family-friendly formats. Always check the age range and label directions.",
+    "href": "#/kids-family",
+    "lifestyle_image": "/vitamin-express-preview/shared/assets/kids-family-essentials-v1.jpg",
+    "lifestyle_alt": "A parent and school-age child preparing a healthy morning routine together",
+    "feature_handle": "sisu-multi-teens-90-chew-tabs",
+    "product_handles": [
+      "sisu-multi-teens-90-chew-tabs",
+      "genestra-zinc-gummies-100-gummies",
+      "gen-vitamin-d3-1000-90-chewable-tablets",
+      "natures-way-standardized-elderberry-cold-and-flu-care-immune-with-vitamin-c-and-zinc-120ml-syrup"
+    ]
+  },
+  "health_goals": [
+    { "title": "Women’s health", "body": "Browse the broader everyday-wellness shelf.", "href": "#/collection/everyday-wellness", "illustration": "/vitamin-express-preview/shared/assets/wellness-womens-health.webp", "tone": "coral" },
+    { "title": "Men’s health", "body": "Browse the broader everyday-wellness shelf.", "href": "#/collection/everyday-wellness", "illustration": "/vitamin-express-preview/shared/assets/wellness-mens-health.webp", "tone": "sky" },
+    { "title": "Hydration & recovery", "body": "Compare sports-nutrition formats and pack sizes.", "href": "#/collection/sports-nutrition", "illustration": "/vitamin-express-preview/shared/assets/wellness-hydration-recovery.webp", "tone": "mint" },
+    { "title": "Joints, bones & muscles", "body": "Browse relevant everyday-wellness products.", "href": "#/collection/everyday-wellness", "illustration": "/vitamin-express-preview/shared/assets/wellness-joints-mobility.webp", "tone": "lilac" },
+    { "title": "Face, skin & hair", "body": "Find oils, creams and personal-care formats.", "href": "#/collection/beauty-and-personal-care", "illustration": "/vitamin-express-preview/shared/assets/wellness-skin-hair.webp", "tone": "peach" },
+    { "title": "Digestion & gut health", "body": "Browse the digestive and gut-health shelf.", "href": "#/collection/digestive-and-gut-health", "illustration": "/vitamin-express-preview/shared/assets/wellness-digestion.webp", "tone": "yellow" }
+  ],
+  "pantry_products": [
+    "organic-traditions-ceylon-cinnamon-powder-227g",
+    "organic-traditions-black-sesame-seeds-454g",
+    "ot-black-sesame-seeds-227g",
+    "megafood-men-over-40-one-daily-bonus-pack-72-30-tablets",
+    "juniper-24-bags-org"
+  ],
+    "editorial": {
+      "eyebrow": "Buy with confidence",
+      "heading": "Compare the label in four quick checks.",
+      "body": "Before choosing, compare the serving—not just the front-of-pack number. These checks make strength, format and value easier to understand.",
+      "label": "Open the 4-minute checklist",
+    "href": "#/article/how-to-read-a-supplement-label",
+    "product_handles": [
+      "salus-calcium-magnesium-500ml-250ml",
+      "new-chapter-fermented-iron-complex-60-vege-caps"
+    ]
+  },
+  "journal_cards": [
+    {
+      "eyebrow": "Shopping basics · 4 minute guide",
+      "title": "How to read a supplement label",
+      "excerpt": "Four practical checkpoints for serving size, form, strength, pack count, directions and warnings.",
+      "href": "#/article/how-to-read-a-supplement-label",
+      "product_handles": ["salus-calcium-magnesium-500ml-250ml", "new-chapter-fermented-iron-complex-60-vege-caps"],
+      "tone": "sky"
+    },
+    {
+      "eyebrow": "Product choice · 5 minute guide",
+      "title": "Capsules, liquids and powders: compare the format",
+      "excerpt": "A product-first way to compare like with like before looking at front-label numbers.",
+      "href": "#/article/compare-supplement-formats",
+      "product_handles": ["a-vogel-echinaforce-50ml", "genuine-health-greens-original-240-capsules"],
+      "tone": "mint"
+    },
+    {
+      "eyebrow": "Food & pantry · 4 minute guide",
+      "title": "Build a clearer everyday pantry shelf",
+      "excerpt": "Use exact pack size, ingredients and storage information to compare pantry products responsibly.",
+      "href": "#/article/build-a-clearer-pantry-shelf",
+      "product_handles": ["organic-traditions-ceylon-cinnamon-powder-227g", "organic-traditions-organic-jumbo-pumpkin-seeds-227g"],
+      "tone": "yellow"
+    }
+  ],
+  "canadian_owned": {
+    "heading": "Shop Canadian owned",
+    "intro": "Discover a focused edit from Canadian, independently or family-owned wellness brands, with current product availability and pricing.",
+    "campaign_eyebrow": "Homegrown wellness",
+    "campaign_heading": "Canadian brands, clearly gathered.",
+    "campaign_body": "Compare familiar supplement and wellness formats from brands whose Canadian ownership is supported by current official company sources.",
+    "verified_brands": [
+      "AOR",
+      "Natural Factors",
+      "New Roots",
+      "Prairie Naturals",
+      "St. Francis Herbs"
+    ],
+    "feature_handles": [
+      "aor-magnesium-glycinate-vegan-non-gmo-gluten-free-360-capsules",
+      "natural-factors-vegan-protein-vanilla-bean-1-kg",
+      "new-roots-vitamin-d3-2500iu-360-softgels"
+    ],
+    "campaign_art_handles": [
+      "prairie-naturals-sport-leanwhey-protein-chocolate-supreme-908g",
+      "st-francis-herbs-skin-harmony-face-oil-blend-30-ml-topical-oil",
+      "aor-advanced-b-complex-499mg-180-capsules"
+    ]
+  },
+  "promo_blocks": [
+    {
+      "eyebrow": "Sports nutrition",
+      "title": "Build your training shelf.",
+      "body": "Compare protein formats, sizes and prices for your routine.",
+      "label": "Explore sports nutrition",
+      "href": "#/collection/sports-nutrition",
+      "product_handle": "natural-factors-vegan-protein-vanilla-bean-1-kg"
+    },
+    {
+      "eyebrow": "Food & healthy living",
+      "title": "Bring colour to the pantry.",
+      "body": "Browse teas, seeds, spices and pantry products with pack details easy to scan.",
+      "label": "Explore the pantry",
+      "href": "#/collection/food-and-healthy-living",
+      "product_handle": "organic-traditions-ceylon-cinnamon-powder-227g"
+    }
+  ]
+}
