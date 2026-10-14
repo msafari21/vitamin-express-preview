@@ -263,6 +263,7 @@ function header() {
     <div class="utility-strip"><div class="utility-strip__inner"><div class="utility-benefits" aria-label="Store information"><a class="canadian-owned-chip" href="#/canadian-owned">${canadaFlag()}<span>Shop Canadian owned</span></a>${settings.utility_benefits.filter((item) => item.enabled).map((item) => { const content = `${icon(item.icon || 'check')}<span>${escapeHtml(item.label)}${item.conditions ? `<small>${escapeHtml(item.conditions)}</small>` : ''}</span>`; return item.href ? `<a href="${escapeHtml(item.href)}">${content}</a>` : `<span>${content}</span>`; }).join('')}</div><nav aria-label="Store utilities"><a href="#/support">Help & policies</a><div class="language-switch" role="group" aria-label="Store language"><button type="button" data-language="en-CA" lang="en-CA" aria-label="English (Canada)" aria-pressed="${getLocale() === 'en-CA'}">EN</button><span aria-hidden="true">/</span><button type="button" data-language="fr-CA" lang="fr-CA" aria-label="Français (Canada)" aria-pressed="${getLocale() === 'fr-CA'}">FR</button></div><button type="button" data-open-localization aria-haspopup="dialog" aria-controls="localization-preview" aria-expanded="false">${currencyLabel()} ${icon('chevron')}</button></nav></div></div>
     <header class="site-header" data-site-header>
       <div class="header-main">
+        <button class="icon-button mobile-only mobile-menu-trigger" type="button" data-mobile-menu aria-label="Open menu" aria-haspopup="dialog" aria-controls="info-dialog">${icon('menu')}</button>
         <a class="brand-lockup" href="#/" aria-label="Vitamin Express home"><img src="/vitamin-express-preview/shared/assets/vitamin-express-wordmark-color.avif" width="600" height="129" alt="Vitamin Express" decoding="async"></a>
         <form class="search-box" data-search-form role="search">
           <label class="sr-only" for="search-scope">Search category</label>
@@ -273,7 +274,6 @@ function header() {
           <div class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Product suggestions" hidden></div>
         </form>
         <div class="header-actions" aria-label="Account and cart">
-          <button class="icon-button mobile-only" type="button" data-mobile-menu aria-label="Open menu">${icon('menu')}</button>
           <button class="header-action account-trigger" type="button" data-open-account aria-haspopup="dialog" aria-controls="account-preview" aria-label="Open account options" title="Account">${icon('user')}<span class="sr-only">Account</span></button>
           <button class="header-action cart-trigger" type="button" data-cart-trigger aria-haspopup="dialog" aria-controls="cart-drawer" aria-label="Open cart, ${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}" title="Cart"><span class="cart-icon-wrap">${icon('cart')}${cartBadge()}</span><span class="sr-only">Cart</span></button>
         </div>
@@ -1352,7 +1352,8 @@ function openLocalization(opener) {
   modal.showModal();
   document.querySelectorAll('[data-open-localization]').forEach(button => button.setAttribute('aria-expanded', 'true'));
   document.body.classList.add('drawer-open');
-  modal.querySelector('select')?.focus();
+  // Keep mobile browsers from opening a native picker as the dialog appears.
+  modal.querySelector('[value="cancel"]')?.focus({ preventScroll: true });
 }
 
 function closeLocalization({ restore = true } = {}) {

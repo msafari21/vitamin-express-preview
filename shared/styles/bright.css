@@ -1,4 +1,4 @@
-/* Bright storefront presentation. Behaviour and layout stay in storefront.css. */
+/* Bright storefront presentation. Core layout stays in storefront.css. */
 :root {
   --ve-paper: #fff;
   --ve-surface-soft: #f6f9f5;
@@ -89,6 +89,22 @@
 .footer-grid a:hover { color: #285821; }
 .footer-localization, .footer-delivery, .footer-socials button, .footer-apps button { background: rgba(255,255,255,.8); border-color: #c4d3b6; color: var(--ve-brand); }
 .footer-localization:hover, .footer-delivery:hover { background: white; border-color: #88a170; }
+/* A calm, compact preferences dialog with deliberate native picker activation. */
+#localization-preview { width: min(29rem,calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; border: 1px solid #e2e9de; border-radius: 1.2rem; box-shadow: 0 1.5rem 4rem rgba(32,60,42,.16); }
+#localization-preview::backdrop { background: rgba(24,46,33,.34); backdrop-filter: blur(3px); }
+#localization-preview .localization-panel { padding: 1.35rem; gap: 1rem; }
+#localization-preview header { align-items: center; margin: -1.35rem -1.35rem 0; padding: 1.2rem 1.35rem; background: #f5faee; border-bottom: 1px solid #e2eadb; }
+#localization-preview header > div { min-width: 0; }
+#localization-preview .eyebrow { margin: 0 0 .25rem; color: #567047; font-size: .68rem; letter-spacing: .09em; }
+#localization-preview h2 { font-size: clamp(1.25rem,5vw,1.55rem); line-height: 1.2; letter-spacing: -.025em; }
+#localization-preview header .icon-button { flex: 0 0 2.75rem; border: 1px solid #dce6d5; border-radius: 50%; background: white; }
+#localization-preview header .icon-button:hover { background: #edf5e4; }
+#localization-preview .localization-panel > p:not(.preference-disclaimer) { margin: 0; font-size: .88rem; line-height: 1.5; }
+#localization-preview label { gap: .45rem; font-size: .8rem; font-weight: 650; }
+#localization-preview select { min-width: 0; min-height: 3.1rem; border-color: #d5e0ce; border-radius: .65rem; background: #fcfdfb; font-size: 1rem; font-weight: 500; color: var(--ve-brand-deep); }
+#localization-preview select:hover { border-color: #8ea779; }
+#localization-preview .preference-disclaimer { padding: .7rem .8rem; border-radius: .6rem; background: #f6f8f3; color: #5c6954; font-size: .72rem; line-height: 1.5; }
+#localization-preview [data-apply-localization] { min-height: 3rem; border-radius: .7rem; font-size: .92rem; }
 @media (max-width: 900px) {
   .mobile-buy-bar.visible { background: white; color: var(--ve-brand-deep); border-color: var(--ve-line); box-shadow: 0 5px 20px rgba(32,60,42,.12); }
   .mobile-buy-bar small { color: var(--ve-ink-soft); }
