@@ -148,7 +148,7 @@
 .brands-shelf .rail-actions { gap: .35rem; }
 .brands-shelf .rail-arrow { width: 2.75rem; height: 2.75rem; }
 .brand-pause .icon { width: 1rem; height: 1rem; }
-.brands-shelf-grid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 5rem) / 6); gap: 1rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-behavior: auto; scrollbar-width: none; padding: .25rem; border-block: 1px solid #e6ecdf; }
+.brands-shelf-grid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 5rem) / 6); gap: 1rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-behavior: auto; scrollbar-width: none; padding: .25rem; }
 .brands-shelf-grid::-webkit-scrollbar { display: none; }
 .brands-shelf-grid > a { min-width: 0; height: 7.5rem; padding: .65rem 1rem; display: grid; place-items: center; border-radius: .7rem; background: white; text-decoration: none; transition: background-color .18s ease; }
 .brands-shelf-grid > a:hover { background: #f7faf2; }
