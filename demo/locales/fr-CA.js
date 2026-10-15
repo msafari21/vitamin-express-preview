@@ -7,7 +7,7 @@ export default {
   'Explore all brands →': 'Voir toutes les marques →', 'Shop the range': 'Voir les produits',
   'Price per pack': 'Prix par emballage', 'From': 'De', 'To': 'À', 'Reset': 'Réinitialiser',
   'Minimum price': 'Prix minimum', 'Maximum price': 'Prix maximum',
-  'Drag or enter your budget, then apply.': 'Déplacez les curseurs ou entrez votre budget, puis appliquez.',
+  'Results update automatically.': 'Les résultats se mettent à jour automatiquement.',
   'Apply price': 'Appliquer', 'Maximum price must be at least the minimum price.': 'Le prix maximum doit être supérieur ou égal au minimum.',
   'Choose pack size': 'Choisir le format', 'Pack size': 'Format', 'Save': 'Économisez',
   'Choose a pack. Price updates with your selection.': 'Choisissez un format. Le prix se met à jour selon votre choix.',

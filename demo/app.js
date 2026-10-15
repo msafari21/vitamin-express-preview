@@ -37,6 +37,8 @@ let brandTimer;
 let heroTouchStartX = null;
 let offerTimer;
 let megaHoverTimer;
+let priceFilterTimer;
+let activeListing;
 let comparedHandles = [];
 const comparedVariants = new Map();
 const MEGA_HOVER_INTENT_MS = 110;
@@ -718,7 +720,7 @@ function priceRangeMarkup(products, range) {
     <p class="price-range-currency"><span>Price per pack</span><b>${escapeHtml(currency)}</b></p>
     <div class="price-range-inputs"><label><span>From</span><div class="price-input-shell"><i aria-hidden="true">${symbol}</i><input name="min" type="number" min="0" step="0.01" inputmode="decimal" value="${min}" required></div></label><span aria-hidden="true">–</span><label><span>To</span><div class="price-input-shell"><i aria-hidden="true">${symbol}</i><input name="max" type="number" min="0" step="0.01" inputmode="decimal" value="${max}" required></div></label></div>
     <div class="price-range-sliders" style="--range-start:${Number(min) / ceiling * 100}%;--range-end:${Number(max) / ceiling * 100}%"><input type="range" data-price-slider="min" aria-label="Minimum price" min="0" max="${ceiling}" step="0.01" value="${min}"><input type="range" data-price-slider="max" aria-label="Maximum price" min="0" max="${ceiling}" step="0.01" value="${max}"></div>
-    <div class="price-range-endpoints" aria-hidden="true"><span>${escapeHtml(endpoint(0))}</span><span>${escapeHtml(endpoint(ceiling))}</span></div><p class="price-range-hint">Drag or enter your budget, then apply.</p><div class="price-range-actions"><button class="button secondary small" type="submit">Apply price</button><button class="text-button" type="button" data-reset-price>Reset</button></div>
+    <div class="price-range-endpoints" aria-hidden="true"><span>${escapeHtml(endpoint(0))}</span><span>${escapeHtml(endpoint(ceiling))}</span></div><p class="price-range-hint">Results update automatically.</p><div class="price-range-actions"><button class="text-button" type="button" data-reset-price>Reset</button></div>
   </form>`;
 }
 
@@ -740,6 +742,7 @@ function updatePriceInputs(input) {
 }
 
 function listingPage({ title, sourceProducts, params, emptyHint = '' }) {
+  activeListing = { title, sourceProducts, emptyHint };
   const selectedBrands = params.getAll('brand');
   const selectedTypes = params.getAll('type');
   const selectedFormats = params.getAll('format');
@@ -786,7 +789,6 @@ function listingPage({ title, sourceProducts, params, emptyHint = '' }) {
   const checkboxList = (items, param, selected, predicate) => `<div class="filter-list">${items.map((item) => `<label class="filter-option"><input type="checkbox" data-facet data-param="${escapeHtml(param)}" value="${escapeHtml(item)}" ${selected.includes(item) ? 'checked' : ''}><span>${escapeHtml(item)}</span><span class="filter-count">${countFor((product) => predicate(product, item))}</span></label>`).join('')}</div>`;
   return `${breadcrumbs([{label:'Home',href:'#/'},{label:title}])}<header class="listing-head"><h1 class="page-title">${escapeHtml(title)}</h1><p class="result-count" aria-live="polite">${products.length}${products.length === sourceProducts.length ? '' : ` of ${sourceProducts.length}`} products</p></header>
     <div class="toolbar"><button class="button secondary small mobile-only" type="button" data-toggle-filters aria-expanded="false">Filter${filterCount ? ` (${filterCount})` : ''}</button><label><span>Sort by</span><select data-sort><option value="featured" ${sort==='featured'?'selected':''}>Featured & available</option><option value="saving" ${sort==='saving'?'selected':''}>Biggest saving</option><option value="price-asc" ${sort==='price-asc'?'selected':''}>Price: low to high</option><option value="price-desc" ${sort==='price-desc'?'selected':''}>Price: high to low</option><option value="title" ${sort==='title'?'selected':''}>Name</option></select></label></div>
-    <div class="selected-chips">${chips}${filterCount ? '<button class="chip chip-clear" type="button" data-clear-filters>Clear all</button>' : ''}</div>
     <div class="collection-layout"><aside class="filter-panel" aria-label="Product filters"><div class="filter-head"><h2>Filter products${filterCount ? ` (${filterCount})` : ''}</h2><button class="icon-button mobile-only" type="button" data-toggle-filters aria-label="Close filters">${icon('close')}</button></div>
       <label class="filter-option filter-availability"><input type="checkbox" data-available ${availableOnly?'checked':''}><span>In stock only</span><span class="filter-count">${countFor((product) => product.available_snapshot)}</span></label>
       <details class="filter-group" open><summary>Price</summary>${priceRangeMarkup(sourceProducts, priceRange)}</details>
@@ -795,7 +797,44 @@ function listingPage({ title, sourceProducts, params, emptyHint = '' }) {
       ${availableAttributes.length ? `<details class="filter-group" open><summary>Preferences</summary><div class="filter-list">${availableAttributes.map((attribute) => `<label class="filter-option"><input type="checkbox" data-facet data-param="attribute" value="${escapeHtml(attribute.value)}" ${selectedAttributes.includes(attribute.value) ? 'checked' : ''}><span>${escapeHtml(attribute.label)}</span><span class="filter-count">${countFor((product) => productAttributes(product).includes(attribute.value))}</span></label>`).join('')}</div></details>` : ''}
       <details class="filter-group"><summary>Brand</summary>${checkboxList(vendors, 'brand', selectedBrands, (product, value) => product.vendor === value)}</details>
       <button class="button filter-apply mobile-only" type="button" data-toggle-filters>View ${products.length} products</button></aside>
-      <div>${products.length ? `<p class="comparison-hint">Want a closer look? Compare up to 3 products.</p>${productGrid(products, { query: params.get('q') || '', priceRange, availableOnly, comparison: true })}` : `<div class="empty-state"><h2>No matches</h2><p>${escapeHtml(emptyHint || 'Clear a filter or try another search.')}</p><button class="button secondary" type="button" data-clear-filters>Clear filters</button></div>`}</div></div><div data-comparison-tray>${comparisonTrayMarkup()}</div><dialog class="comparison-dialog" id="product-comparison" aria-labelledby="comparison-title"></dialog>`;
+      <div data-listing-results><div class="selected-chips">${chips}${filterCount ? '<button class="chip chip-clear" type="button" data-clear-filters>Clear all</button>' : ''}</div>${products.length ? `<p class="comparison-hint">Want a closer look? Compare up to 3 products.</p>${productGrid(products, { query: params.get('q') || '', priceRange, availableOnly, comparison: true })}` : `<div class="empty-state"><h2>No matches</h2><p>${escapeHtml(emptyHint || 'Clear a filter or try another search.')}</p><button class="button secondary" type="button" data-clear-filters>Clear filters</button></div>`}</div></div><div data-comparison-tray>${comparisonTrayMarkup()}</div><dialog class="comparison-dialog" id="product-comparison" aria-labelledby="comparison-title"></dialog>`;
+}
+
+function applyLivePrice(form, reset = false) {
+  clearTimeout(priceFilterTimer);
+  if (!form?.isConnected || !activeListing || (!reset && !form.checkValidity())) return;
+  const { path, params } = parseRoute();
+  params.delete('price');
+  if (reset) {
+    params.delete('min');
+    params.delete('max');
+    for (const key of ['min', 'max']) {
+      const slider = form.querySelector(`[data-price-slider="${key}"]`);
+      slider.value = key === 'min' ? 0 : slider.max;
+      form.elements[key].value = Number(slider.value).toFixed(2);
+    }
+    updatePriceInputs(form.querySelector('[data-price-slider="min"]'));
+    updatePriceInputs(form.querySelector('[data-price-slider="max"]'));
+  } else {
+    for (const key of ['min', 'max']) params.set(key, (Number(form.elements[key].value) / Number(form.dataset.rate)).toFixed(6));
+  }
+  const hash = `#${path}${params.size ? `?${params}` : ''}`;
+  if (hash === location.hash) return;
+  const template = document.createElement('template');
+  template.innerHTML = listingPage({ ...activeListing, params });
+  // Keep the slider, focus, pointer capture and mobile drawer intact.
+  const results = app.querySelector('[data-listing-results]');
+  results.style.minHeight = `${Math.max(0, innerHeight - results.getBoundingClientRect().top)}px`;
+  for (const selector of ['[data-listing-results]', '.result-count', '.filter-head h2', '.toolbar [data-toggle-filters]', '.filter-apply']) {
+    const current = app.querySelector(selector);
+    const next = template.content.querySelector(selector);
+    current.innerHTML = next.innerHTML;
+    localize(current);
+  }
+  syncComparison();
+  history.replaceState(null, '', hash);
+  previousHash = hash;
+  render.lastUrl = location.href;
 }
 
 function collectionPage(slug, params) {
@@ -1312,6 +1351,8 @@ function settingsDrawer() {
 }
 
 function render() {
+  clearTimeout(priceFilterTimer);
+  activeListing = null;
   closeSelectMenu();
   locationRequest?.abort();
   document.body.classList.remove('filters-open');
@@ -1455,15 +1496,7 @@ function queueMutation(button, operation) {
 app.addEventListener('submit', (event) => {
   if (event.target.matches('[data-price-range]')) {
     event.preventDefault();
-    const form = event.target;
-    const min = Number(form.elements.min.value);
-    const max = Number(form.elements.max.value);
-    if (min > max) { form.elements.max.setCustomValidity(t('Maximum price must be at least the minimum price.')); form.reportValidity(); return; }
-    updateParams(params => {
-      params.delete('price');
-      params.set('min', (min / Number(form.dataset.rate)).toFixed(6));
-      params.set('max', (max / Number(form.dataset.rate)).toFixed(6));
-    }, { preserveScroll: !matchMedia('(max-width: 700px)').matches });
+    applyLivePrice(event.target);
     return;
   }
   if (event.target.matches('[data-delivery-form]')) {
@@ -1704,7 +1737,7 @@ app.addEventListener('click', (event) => {
     comparedHandles = removeComparison ? comparedHandles.filter(handle => handle !== removeComparison.dataset.removeComparison) : [];
     syncComparison();
   }
-  if (event.target.closest('[data-reset-price]')) updateParams(params => { params.delete('min'); params.delete('max'); params.delete('price'); }, {preserveScroll: !matchMedia('(max-width: 700px)').matches});
+  if (event.target.closest('[data-reset-price]')) applyLivePrice(event.target.closest('[data-price-range]'), true);
   const deliveryTrigger = event.target.closest('[data-open-delivery]');
   if (deliveryTrigger) { openDelivery(deliveryTrigger); return; }
   if (event.target.closest('[data-close-delivery]')) { document.querySelector('#delivery-preview').close(); return; }
@@ -1834,7 +1867,12 @@ app.addEventListener('click', (event) => {
 });
 
 app.addEventListener('input', (event) => {
-  if (event.target.matches('[data-price-range] input')) updatePriceInputs(event.target);
+  if (event.target.matches('[data-price-range] input')) {
+    updatePriceInputs(event.target);
+    clearTimeout(priceFilterTimer);
+    const form = event.target.closest('[data-price-range]');
+    priceFilterTimer = setTimeout(() => applyLivePrice(form), event.target.type === 'range' ? 120 : 350);
+  }
   if (event.target.matches('[data-order-note]')) updateOrderNote(event.target.value);
   if (event.target.matches('[data-delivery-form] input')) {
     locationRequest?.abort();
@@ -1974,6 +2012,7 @@ app.addEventListener('close', (event) => {
 }, true);
 
 app.addEventListener('change', (event) => {
+  if (event.target.matches('[data-price-range] input')) applyLivePrice(event.target.closest('[data-price-range]'));
   if (event.target.matches('[data-compare-product]')) {
     const handle = event.target.dataset.compareProduct;
     comparedHandles = comparedHandles.filter(item => item !== handle);
