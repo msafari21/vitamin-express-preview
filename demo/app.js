@@ -272,8 +272,11 @@ function header() {
         <button class="icon-button mobile-only mobile-menu-trigger" type="button" data-mobile-menu aria-label="Open menu" aria-haspopup="dialog" aria-controls="info-dialog">${icon('menu')}</button>
         <a class="brand-lockup" href="#/" aria-label="Vitamin Express home"><img src="/vitamin-express-preview/shared/assets/vitamin-express-wordmark-color.avif" width="600" height="129" alt="Vitamin Express" decoding="async"></a>
         <form class="search-box" data-search-form role="search">
-          <label class="sr-only" for="search-scope">Search category</label>
-          <select id="search-scope" name="scope" aria-label="Search category"><option value="">All categories</option>${families.map((family) => `<option value="${escapeHtml(family)}" ${currentScope === family ? 'selected' : ''}>${escapeHtml(family)}</option>`).join('')}</select>
+          <div class="search-category">
+            <input id="search-scope" name="scope" type="hidden" value="${escapeHtml(currentScope)}">
+            <button class="search-scope-trigger" type="button" data-search-scope-trigger aria-haspopup="menu" aria-controls="search-scope-menu" aria-expanded="false" aria-label="${escapeHtml(`${t('Search category')}: ${t(currentScope || 'All categories')}`)}"><span>${escapeHtml(currentScope || 'All categories')}</span>${icon('chevron')}</button>
+            <div class="search-scope-menu" id="search-scope-menu" role="menu" aria-label="Search category" hidden>${['', ...families].map(family => `<button type="button" role="menuitemradio" aria-checked="${currentScope === family}" tabindex="-1" data-search-scope-option="${escapeHtml(family)}"><span>${escapeHtml(family || 'All categories')}</span>${icon('check')}</button>`).join('')}</div>
+          </div>
           <label class="sr-only" for="site-search">Search products and brands</label>
           <div class="search-field">${icon('search')}<input id="site-search" name="q" type="search" placeholder="Search products, brands or ingredients" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false" value="${escapeHtml(parseRoute().params.get('q') || '')}"><button class="search-clear" type="button" data-clear-search aria-label="Clear search">${icon('close')}</button></div>
           <button class="search-submit" type="submit" aria-label="Search"><span>Search</span>${icon('search')}</button>
@@ -809,6 +812,34 @@ function searchPage(params) {
   const matches = catalog.products.filter((product) => (!scope || product.family === scope) && productMatchesTerms(product, terms));
   const scopedTitle = scope ? ` in ${scope}` : '';
   return listingPage({ title: query ? `Results for “${query}”${scopedTitle}` : `Search${scopedTitle}`, sourceProducts: matches, params, emptyHint: query ? `We couldn’t find “${query}”${scopedTitle}. Try a brand, ingredient or a shorter term.` : 'Enter a product, brand or ingredient.' });
+}
+
+function closeSearchScope(returnFocus = false) {
+  const trigger = document.querySelector('[data-search-scope-trigger]');
+  const menu = document.querySelector('#search-scope-menu');
+  if (!trigger || !menu) return;
+  menu.hidden = true;
+  trigger.setAttribute('aria-expanded', 'false');
+  if (returnFocus) trigger.focus();
+}
+
+function openSearchScope(last = false) {
+  const menu = document.querySelector('#search-scope-menu');
+  if (!menu) return;
+  closeAutocomplete();
+  closeMega();
+  menu.hidden = false;
+  document.querySelector('[data-search-scope-trigger]').setAttribute('aria-expanded', 'true');
+  const options = [...menu.querySelectorAll('[data-search-scope-option]')];
+  (last ? options.at(-1) : menu.querySelector('[aria-checked="true"]') || options[0])?.focus();
+}
+
+function syncSearchScope() {
+  const scope = document.querySelector('#search-scope').value;
+  const trigger = document.querySelector('[data-search-scope-trigger]');
+  trigger.querySelector('span').textContent = t(scope || 'All categories');
+  trigger.setAttribute('aria-label', `${t('Search category')}: ${t(scope || 'All categories')}`);
+  document.querySelectorAll('[data-search-scope-option]').forEach(option => option.setAttribute('aria-checked', String(option.dataset.searchScopeOption === scope)));
 }
 
 function updateAutocomplete(input) {
@@ -1369,6 +1400,7 @@ function changeLanguage(nextLocale, nextCurrency = getPreferences().currency) {
   render();
   document.querySelector('#site-search').value = search;
   document.querySelector('#search-scope').value = scope;
+  syncSearchScope();
   if (quantity) document.querySelector('#pdp-quantity').value = quantity;
   requestAnimationFrame(() => {
     scrollTo({ top, behavior: 'instant' });
@@ -1623,6 +1655,21 @@ function closeSettings() {
 }
 
 app.addEventListener('click', (event) => {
+  const scopeTrigger = event.target.closest('[data-search-scope-trigger]');
+  if (scopeTrigger) {
+    if (scopeTrigger.getAttribute('aria-expanded') === 'true') closeSearchScope();
+    else openSearchScope();
+    return;
+  }
+  const scopeOption = event.target.closest('[data-search-scope-option]');
+  if (scopeOption) {
+    document.querySelector('#search-scope').value = scopeOption.dataset.searchScopeOption;
+    syncSearchScope();
+    closeSearchScope();
+    document.querySelector('#site-search').focus();
+    return;
+  }
+  if (!event.target.closest('.search-category')) closeSearchScope();
   if (event.target.closest('[data-clear-search]')) {
     const input = document.querySelector('#site-search');
     input.value = '';
@@ -1832,6 +1879,7 @@ app.addEventListener('scroll', (event) => {
 }, true);
 
 app.addEventListener('focusin', (event) => {
+  if (!event.target.closest('.search-category')) closeSearchScope();
   if (event.target.matches('#site-search') && event.target.value.trim().length >= 2) updateAutocomplete(event.target);
   const megaTrigger = event.target.matches('[data-mega-link]') ? event.target.closest('[data-mega-hover]')?.querySelector('[data-mega-trigger]') : event.target.closest('[data-mega-trigger]');
   if (megaTrigger && !suppressMegaFocusOpen) openMega({ trigger: megaTrigger });
@@ -1839,6 +1887,9 @@ app.addEventListener('focusin', (event) => {
 });
 
 app.addEventListener('focusout', (event) => {
+  if (event.target.closest('.search-category')) setTimeout(() => {
+    if (!document.activeElement?.closest('.search-category')) closeSearchScope();
+  }, 0);
   if (event.target.closest('[data-search-form]')) setTimeout(() => {
     if (!document.activeElement?.closest('[data-search-form]')) closeAutocomplete();
   }, 0);
@@ -1846,6 +1897,27 @@ app.addEventListener('focusout', (event) => {
 });
 
 app.addEventListener('keydown', (event) => {
+  if (event.target.matches('[data-search-scope-trigger]') && ['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    event.preventDefault(); openSearchScope(event.key === 'ArrowUp'); return;
+  }
+  if (event.target.closest('.search-category') && event.key === 'Escape') {
+    event.preventDefault(); closeSearchScope(true); return;
+  }
+  if (event.target.matches('[data-search-scope-option]')) {
+    const options = [...event.target.closest('[role="menu"]').querySelectorAll('[data-search-scope-option]')];
+    const index = options.indexOf(event.target);
+    if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault();
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
+      options[next].focus(); return;
+    }
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && event.key !== ' ') {
+      const ordered = [...options.slice(index + 1), ...options.slice(0, index + 1)];
+      const match = ordered.find(option => searchText(option.textContent.trim()).startsWith(searchText(event.key)));
+      if (match) { event.preventDefault(); match.focus(); }
+      return;
+    }
+  }
   if (event.target.matches('[data-mega-trigger],[data-mega-link]') && event.key === 'ArrowDown') { event.preventDefault(); const trigger = event.target.matches('[data-mega-trigger]') ? event.target : event.target.closest('[data-mega-hover]')?.querySelector('[data-mega-trigger]'); openMega({ trigger, focusFirst: true }); return; }
   const dealTab = event.target.closest('[data-deals-tab]');
   if (dealTab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
@@ -1919,7 +1991,7 @@ app.addEventListener('change', (event) => {
     form.querySelector('[role="status"]').textContent = '';
     form.elements.postal.placeholder = event.target.value === 'CA' ? 'M5V 2T6' : event.target.value === 'US' ? '10001' : t('Postal / ZIP code');
   }
-  if (event.target.matches('#search-scope')) { const input = document.querySelector('#site-search'); if (input?.value.trim().length >= 2) updateAutocomplete(input); }
+  if (event.target.matches('#search-scope')) { syncSearchScope(); const input = document.querySelector('#site-search'); if (input?.value.trim().length >= 2) updateAutocomplete(input); }
   if (event.target.matches('[data-sort]')) updateParams((params) => params.set('sort', event.target.value));
   if (event.target.matches('[data-facet]')) updateParams((params) => { const key = event.target.dataset.param; const values = [...document.querySelectorAll(`[data-facet][data-param="${key}"]:checked`)].map((input) => input.value); params.delete(key); values.forEach((value) => params.append(key, value)); });
   if (event.target.matches('[data-price]')) updateParams((params) => event.target.value ? params.set('price', event.target.value) : params.delete('price'));
