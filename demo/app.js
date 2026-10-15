@@ -1,4 +1,5 @@
 import { getLocale, setLocale, t, localize, searchText, localizedSearchText } from './i18n.js';
+import { enhanceSelects, syncSelect, closeSelectMenu } from './select-menus.js';
 import { currencies, countries, getPreferences, setCurrency, setDestination, clearDestination, getOrderNote, saveOrderNote, displayPrice, shippingEstimate, detectDestination } from './shopping-preferences.js';
 
 const app = document.querySelector('#app');
@@ -710,11 +711,14 @@ function priceRangeMarkup(products, range) {
   const ceiling = Math.max(1, Math.ceil(Math.max(range ? presentedPrice(range.min).amount : 0, range && Number.isFinite(range.max) ? presentedPrice(range.max).amount : 0, ...products.flatMap(product => product.variants.map(variant => presentedPrice(variant.price.amount, variant.price.currency).amount)))));
   const min = Math.min(ceiling, range ? presentedPrice(range.min).amount : 0).toFixed(2);
   const max = Math.min(ceiling, range ? presentedPrice(range.max).amount : ceiling).toFixed(2);
+  const currency = presentedPrice(0).currency;
+  const symbol = currency === 'EUR' ? '€' : '$';
+  const endpoint = value => new Intl.NumberFormat(getLocale(), {style:'currency', currency, maximumFractionDigits:0}).format(value);
   return `<form class="price-range-form" data-price-range data-rate="${rate}">
-    <p class="price-range-currency">${escapeHtml(presentedPrice(0).currency)} · <span>Price per pack</span></p>
-    <div class="price-range-inputs"><label><span>From</span><input name="min" type="number" min="0" step="0.01" inputmode="decimal" value="${min}" required></label><span aria-hidden="true">–</span><label><span>To</span><input name="max" type="number" min="0" step="0.01" inputmode="decimal" value="${max}" required></label></div>
+    <p class="price-range-currency"><span>Price per pack</span><b>${escapeHtml(currency)}</b></p>
+    <div class="price-range-inputs"><label><span>From</span><div class="price-input-shell"><i aria-hidden="true">${symbol}</i><input name="min" type="number" min="0" step="0.01" inputmode="decimal" value="${min}" required></div></label><span aria-hidden="true">–</span><label><span>To</span><div class="price-input-shell"><i aria-hidden="true">${symbol}</i><input name="max" type="number" min="0" step="0.01" inputmode="decimal" value="${max}" required></div></label></div>
     <div class="price-range-sliders" style="--range-start:${Number(min) / ceiling * 100}%;--range-end:${Number(max) / ceiling * 100}%"><input type="range" data-price-slider="min" aria-label="Minimum price" min="0" max="${ceiling}" step="0.01" value="${min}"><input type="range" data-price-slider="max" aria-label="Maximum price" min="0" max="${ceiling}" step="0.01" value="${max}"></div>
-    <p class="price-range-hint">Drag or enter your budget, then apply.</p><div class="price-range-actions"><button class="button secondary small" type="submit">Apply price</button><button class="text-button" type="button" data-reset-price>Reset</button></div>
+    <div class="price-range-endpoints" aria-hidden="true"><span>${escapeHtml(endpoint(0))}</span><span>${escapeHtml(endpoint(ceiling))}</span></div><p class="price-range-hint">Drag or enter your budget, then apply.</p><div class="price-range-actions"><button class="button secondary small" type="submit">Apply price</button><button class="text-button" type="button" data-reset-price>Reset</button></div>
   </form>`;
 }
 
@@ -1308,6 +1312,7 @@ function settingsDrawer() {
 }
 
 function render() {
+  closeSelectMenu();
   locationRequest?.abort();
   document.body.classList.remove('filters-open');
   megaPinned = false;
@@ -1342,6 +1347,7 @@ function render() {
   }
   document.documentElement.lang = getLocale();
   localize(app);
+  enhanceSelects(app);
   syncComparison();
   document.querySelector('.skip-link').textContent = t('Skip to content');
   render.lastUrl = location.href;
@@ -1627,6 +1633,7 @@ async function locateDelivery(button) {
     const destination = await detectDestination(settings.delivery_preview, { signal: request.signal });
     if (request.signal.aborted || !form.isConnected) return;
     form.elements.country.value = destination.country;
+    syncSelect(form.elements.country);
     form.elements.postal.value = destination.postal;
     form.elements.postal.removeAttribute('aria-invalid');
     status.textContent = t('Location found. Check the postal code, then save.');
@@ -1682,6 +1689,7 @@ app.addEventListener('click', (event) => {
   if (event.target.closest('[data-open-comparison]')) {
     compareDialog.innerHTML = comparisonMarkup();
     localize(compareDialog);
+    enhanceSelects(compareDialog);
     compareDialog.showModal();
     compareDialog.querySelector('[data-close-comparison]').focus({preventScroll:true});
     document.body.classList.add('drawer-open');
@@ -1979,7 +1987,9 @@ app.addEventListener('change', (event) => {
     const left = modal.querySelector('.comparison-scroll').scrollLeft;
     modal.innerHTML = comparisonMarkup();
     localize(modal);
-    modal.querySelector(`[data-compare-variant="${handle}"]`).focus({preventScroll:true});
+    enhanceSelects(modal);
+    const updatedSelect = modal.querySelector(`[data-compare-variant="${handle}"]`);
+    (updatedSelect.closest('.select-menu')?.querySelector('.select-menu-trigger') || updatedSelect).focus({preventScroll:true});
     modal.querySelector('.comparison-scroll').scrollLeft = left;
   }
   if (event.target.matches('[data-delivery-form] select')) {
