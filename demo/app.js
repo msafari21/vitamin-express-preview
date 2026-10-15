@@ -116,6 +116,7 @@ function icon(name) {
   const paths = {
     location: '<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/>',
     chevron: '<path d="m5 9 7 7 7-7"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
     pause: '<path d="M9 5v14M15 5v14"/>',
     play: '<path d="m8 5 11 7-11 7Z"/>',
     user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-4 3-6 7-6s6.4 2 7 6"/>',
@@ -274,8 +275,8 @@ function header() {
           <label class="sr-only" for="search-scope">Search category</label>
           <select id="search-scope" name="scope" aria-label="Search category"><option value="">All categories</option>${families.map((family) => `<option value="${escapeHtml(family)}" ${currentScope === family ? 'selected' : ''}>${escapeHtml(family)}</option>`).join('')}</select>
           <label class="sr-only" for="site-search">Search products and brands</label>
-          <input id="site-search" name="q" type="search" placeholder="Search products, brands or ingredients" autocomplete="off" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false" value="${escapeHtml(parseRoute().params.get('q') || '')}">
-          <button type="submit">Search</button>
+          <div class="search-field">${icon('search')}<input id="site-search" name="q" type="search" placeholder="Search products, brands or ingredients" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false" value="${escapeHtml(parseRoute().params.get('q') || '')}"><button class="search-clear" type="button" data-clear-search aria-label="Clear search">${icon('close')}</button></div>
+          <button class="search-submit" type="submit" aria-label="Search"><span>Search</span>${icon('search')}</button>
           <div class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Product suggestions" hidden></div>
         </form>
         <div class="header-actions" aria-label="Account and cart">
@@ -823,9 +824,9 @@ function updateAutocomplete(input) {
   const terms = query.split(/\s+/).filter(Boolean);
   const scope = input.closest('[data-search-form]').querySelector('[name="scope"]')?.value || '';
   const eligibleProducts = catalog.products.filter((product) => !scope || product.family === scope);
-  const matches = eligibleProducts.filter((product) => productMatchesTerms(product, terms))
-    .sort((a, b) => Number(productSearchIndex(b).includes(query)) - Number(productSearchIndex(a).includes(query)) || Number(b.available_snapshot) - Number(a.available_snapshot))
-    .slice(0, 5);
+  const allMatches = eligibleProducts.filter((product) => productMatchesTerms(product, terms))
+    .sort((a, b) => Number(searchText(b.title).startsWith(query)) - Number(searchText(a.title).startsWith(query)) || Number(productSearchIndex(b).includes(query)) - Number(productSearchIndex(a).includes(query)) || Number(b.available_snapshot) - Number(a.available_snapshot));
+  const matches = allMatches.slice(0, 5);
   const brands = [...new Set(eligibleProducts.map((product) => product.vendor))]
     .filter((brand) => terms.every((term) => searchText(brand).includes(term))).slice(0, 2);
   const families = scope ? [] : [...new Set(catalog.products.map((product) => product.family))]
@@ -833,15 +834,17 @@ function updateAutocomplete(input) {
   const scopeParam = scope ? `&scope=${encodeURIComponent(scope)}` : '';
   const productSuggestions = matches.length ? `<p class="suggestion-heading">Products</p>${matches.map((product) => { const matched = variantFromSearch(product, query); return `<a class="suggestion" role="option" href="${productHref(product, matched?.source_id || '')}"><img src="${productImage(product)}" width="56" height="56" alt=""><span><small>${escapeHtml(product.vendor)} · ${escapeHtml(matched?.title || product.family)}</small><strong>${escapeHtml(product.title)}</strong>${product.available_snapshot ? '' : '<em>Out of stock</em>'}</span><b>${escapeHtml(matched ? moneyLabel(matched.price.amount, matched.price.currency) : `${money(product.price_range.min)}${product.price_range.min !== product.price_range.max ? '+' : ''}`)}</b></a>`; }).join('')}` : '';
   const discoverySuggestions = brands.length || families.length ? `<div class="suggestion-discovery">${families.map((family) => `<a role="option" href="#/collection/${slugify(family)}"><small>Category</small><strong>${escapeHtml(family)}</strong></a>`).join('')}${brands.map((brand) => `<a role="option" href="#/brand/${slugify(brand)}"><small>Brand</small><strong>${escapeHtml(brand)}</strong></a>`).join('')}</div>` : '';
-  panel.innerHTML = matches.length || brands.length || families.length
-    ? `${discoverySuggestions}${productSuggestions}<a class="suggestion-all" role="option" href="#/search?q=${encodeURIComponent(input.value.trim())}${scopeParam}">View all results →</a>`
-    : `<div class="suggestion-empty" role="status"><strong>No matches yet</strong><span>Try a brand, ingredient or shorter search.</span><div><a href="#/collection/vitamins">Vitamins</a><a href="#/collection/minerals">Minerals</a><a href="#/categories">All categories</a></div></div>`;
+  const scopeHint = scope ? `<div class="suggestion-scope"><span>${escapeHtml(t(scope))}</span><a role="option" href="#/search?q=${encodeURIComponent(input.value.trim())}">Search all categories</a></div>` : '';
+  panel.innerHTML = scopeHint + (matches.length || brands.length || families.length
+    ? `${discoverySuggestions}${productSuggestions}<a class="suggestion-all" role="option" href="#/search?q=${encodeURIComponent(input.value.trim())}${scopeParam}"><span>View all results →</span><b>${allMatches.length}</b></a>`
+    : `<div class="suggestion-empty" role="status"><strong>No matches yet</strong><span>Try a brand, ingredient or shorter search.</span><div><a href="#/collection/vitamins">Vitamins</a><a href="#/collection/minerals">Minerals</a><a href="#/categories">All categories</a></div></div>`);
   localize(panel);
   panel.hidden = false;
   input.setAttribute('aria-expanded', 'true');
 }
 
 function closeAutocomplete(input = document.querySelector('#site-search')) {
+  clearTimeout(autocompleteTimer);
   const panel = input?.closest('[data-search-form]')?.querySelector('.search-suggestions');
   if (panel) { panel.hidden = true; input.setAttribute('aria-expanded', 'false'); }
 }
@@ -1620,6 +1623,14 @@ function closeSettings() {
 }
 
 app.addEventListener('click', (event) => {
+  if (event.target.closest('[data-clear-search]')) {
+    const input = document.querySelector('#site-search');
+    input.value = '';
+    closeAutocomplete(input);
+    input.focus();
+    return;
+  }
+  if (!event.target.closest('[data-search-form]')) closeAutocomplete();
   const compareDialog = document.querySelector('#product-comparison');
   if (event.target.closest('[data-open-comparison]')) {
     compareDialog.innerHTML = comparisonMarkup();
@@ -1847,6 +1858,8 @@ app.addEventListener('keydown', (event) => {
   }
   if (event.key === 'Escape' && (event.target.closest('[data-mega-menu]') || event.target.matches('[data-mega-trigger],[data-mega-link]'))) { event.preventDefault(); megaPinned = false; closeMega({ returnFocus: true }); return; }
   if (event.target.matches('#site-search') && ['ArrowDown', 'ArrowUp'].includes(event.key)) {
+    clearTimeout(autocompleteTimer);
+    if (event.target.getAttribute('aria-expanded') === 'false') updateAutocomplete(event.target);
     const options = [...event.target.closest('[data-search-form]').querySelectorAll('[role="option"]')];
     if (!options.length) return;
     event.preventDefault(); options[event.key === 'ArrowDown' ? 0 : options.length - 1].focus(); return;
@@ -1854,7 +1867,7 @@ app.addEventListener('keydown', (event) => {
   if (event.target.matches('[role="option"]') && ['ArrowDown', 'ArrowUp', 'Escape'].includes(event.key)) {
     event.preventDefault();
     const form = event.target.closest('[data-search-form]'); const input = form.querySelector('#site-search');
-    if (event.key === 'Escape') { closeAutocomplete(input); input.focus(); return; }
+    if (event.key === 'Escape') { input.focus(); closeAutocomplete(input); return; }
     const options = [...form.querySelectorAll('[role="option"]')]; const index = options.indexOf(event.target); const delta = event.key === 'ArrowDown' ? 1 : -1; options[(index + delta + options.length) % options.length].focus();
   }
 });

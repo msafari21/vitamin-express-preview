@@ -347,4 +347,6 @@ export default {
   'No form submits in this local demo. Production contact channels and service levels require owner confirmation.': 'Aucun formulaire n’est envoyé dans cette démonstration. Les coordonnées et niveaux de service restent à confirmer.',
   'No verified current/reference price pairs match these filters.': 'Aucune offre vérifiée ne correspond à ces filtres.',
   'Clear a filter to see more kids and family essentials.': 'Retirez un filtre pour voir davantage d’essentiels pour la famille.',
+  'Clear search': 'Effacer la recherche',
+  'Search all categories': 'Rechercher dans toutes les catégories',
 };
